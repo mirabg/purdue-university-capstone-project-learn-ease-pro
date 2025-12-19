@@ -13,6 +13,8 @@ A robust Express.js REST API with MongoDB, featuring JWT authentication, role-ba
 - ✨ **Input Validation** - Mongoose schema validation
 - 📝 **Comprehensive API** - Full CRUD operations for user management
 
+- 🌱 **Database Seeding** - Initial admin user setup
+
 ## Tech Stack
 
 - **Runtime:** Node.js
@@ -74,7 +76,21 @@ A robust Express.js REST API with MongoDB, featuring JWT authentication, role-ba
    mongod --config /usr/local/etc/mongod.conf
    ```
 
-5. **Run the server**
+5. **Seed the database with initial admin user**
+
+   ```bash
+   npm run seed:admin
+   ```
+
+   This creates an admin user with:
+
+   - **Email:** admin@nowhere.com
+   - **Password:** changeme
+   - **Role:** admin
+
+   ⚠️ **Important:** Change the password after first login!
+
+6. **Run the server**
 
    ```bash
    # Development mode with auto-reload
@@ -85,6 +101,27 @@ A robust Express.js REST API with MongoDB, featuring JWT authentication, role-ba
    ```
 
 The server will start on `http://localhost:5001`
+
+## Quick Start
+
+After installation and seeding, test the API:
+
+```bash
+# Login with the admin account
+curl -X POST http://localhost:5001/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@nowhere.com",
+    "password": "changeme"
+  }'
+
+# Save the returned token and use it for authenticated requests
+export TOKEN="your_token_here"
+
+# Get all users
+curl -X GET http://localhost:5001/api/users \
+  -H "Authorization: Bearer $TOKEN"
+```
 
 ## API Endpoints
 
@@ -221,6 +258,8 @@ backend/
 │   ├── routes/          # Route definitions
 │   │   ├── index.js
 │   │   └── userRoutes.js
+│   ├── scripts/         # Utility scripts
+│   │   └── seedAdmin.js # Seed initial admin user
 │   └── services/        # Business logic
 │       └── userService.js
 ├── __tests__/           # Test files
@@ -277,6 +316,43 @@ npm test -- --coverage
 
 **Test Suites:** 10 (9 unit, 1 integration)  
 **Total Tests:** 190 (144 unit, 46 integration)
+
+**Note:** Tests use an in-memory MongoDB instance and do not affect your development database.
+
+## Database Management
+
+### Seed Admin User
+
+Create the initial admin user (safe to run multiple times):
+
+```bash
+npm run seed:admin
+```
+
+**Default Admin Credentials:**
+
+- Email: `admin@nowhere.com`
+- Password: `changeme`
+
+⚠️ **Security:** Change the default password immediately after first login in production!
+
+### Reset Database
+
+To clear all data from the database:
+
+```bash
+# Connect to MongoDB shell
+mongosh
+
+# Select the database
+use learneasepro
+
+# Drop all collections
+db.dropDatabase()
+
+# Reseed admin user
+npm run seed:admin
+```
 
 ## Optimistic Locking
 
@@ -347,6 +423,8 @@ Common HTTP status codes:
 - `npm start` - Start production server
 - `npm run dev` - Start development server with nodemon
 - `npm test` - Run all tests with coverage
+- `npm run test:watch` - Run tests in watch mode
+- `npm run seed:admin` - Seed database with admin user
 - `npm run lint` - Run ESLint (if configured)
 
 ### Adding New Features
@@ -382,6 +460,30 @@ If port 5001 is in use, either:
 - Ensure MongoDB memory server can start
 - Set `NODE_ENV=test` for integration tests
 - Clear Jest cache: `npx jest --clearCache`
+
+### Admin User Issues
+
+- If you can't login with admin credentials, reseed the database:
+  ```bash
+  npm run seed:admin
+  ```
+- The script will skip creation if admin already exists
+- To recreate the admin user, delete it first via MongoDB shell or another admin account
+
+## Production Deployment Checklist
+
+Before deploying to production:
+
+- [ ] Change `JWT_SECRET` to a secure random string
+- [ ] Update `MONGODB_URI` to production database
+- [ ] Set `NODE_ENV=production`
+- [ ] Update `CORS_ORIGIN` to your frontend domain
+- [ ] Change default admin password immediately
+- [ ] Enable HTTPS/TLS
+- [ ] Set up proper logging and monitoring
+- [ ] Configure rate limiting
+- [ ] Set up database backups
+- [ ] Review and update security headers
 
 ## Contributing
 

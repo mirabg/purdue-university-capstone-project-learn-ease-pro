@@ -2,7 +2,12 @@ module.exports = {
   testEnvironment: "node",
   coveragePathIgnorePatterns: ["/node_modules/"],
   testMatch: ["**/__tests__/**/*.test.js"],
-  collectCoverageFrom: ["src/**/*.js", "!src/**/*.test.js", "!server.js"],
+  collectCoverageFrom: [
+    "src/**/*.js",
+    "!src/**/*.test.js",
+    "!src/scripts/**",
+    "!server.js",
+  ],
   coverageThreshold: {
     global: {
       branches: 70,
