@@ -12,6 +12,7 @@ router.post("/register", userController.register);
 router.post("/login", userController.login);
 
 // CRUD operations
+router.post("/", requireAdmin, userController.createUser); // Admin creates new user
 router.get("/", requireAdmin, userController.getAllUsers); // Only admin can see all users
 router.get("/:id", authorizeAdminOrOwner(), userController.getUserById); // Admin or owner
 router.put("/:id", authorizeAdminOrOwner(), userController.updateUser); // Admin or owner

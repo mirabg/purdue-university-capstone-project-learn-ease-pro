@@ -50,6 +50,33 @@ class UserRepository {
   }
 
   /**
+   * Find users with pagination
+   */
+  async findWithPagination(filter = {}, skip = 0, limit = 10) {
+    try {
+      const users = await User.find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+      return users;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Count users matching filter
+   */
+  async count(filter = {}) {
+    try {
+      const count = await User.countDocuments(filter);
+      return count;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Update user by ID
    */
   async update(id, updateData) {

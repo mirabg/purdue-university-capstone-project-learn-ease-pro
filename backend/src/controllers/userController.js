@@ -18,7 +18,6 @@ exports.register = async (req, res) => {
       state,
       zipcode,
       phone,
-      role,
     } = req.body;
 
     // Validate input
@@ -30,6 +29,7 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Register user with student role (role is set by model default)
     const user = await userService.registerUser({
       firstName,
       lastName,
@@ -40,7 +40,6 @@ exports.register = async (req, res) => {
       state,
       zipcode,
       phone,
-      role,
     });
 
     // Generate JWT token
@@ -48,7 +47,8 @@ exports.register = async (req, res) => {
       user._id.toString(),
       user.role,
       user.email,
-      user.firstName
+      user.firstName,
+      user.lastName
     );
 
     res.status(201).json({
@@ -88,7 +88,8 @@ exports.login = async (req, res) => {
       user._id.toString(),
       user.role,
       user.email,
-      user.firstName
+      user.firstName,
+      user.lastName
     );
 
     res.status(200).json({
@@ -111,12 +112,20 @@ exports.login = async (req, res) => {
  */
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await userService.getAllUsers();
+    const { page = 1, limit = 10, search = "" } = req.query;
+
+    const result = await userService.getAllUsers(
+      parseInt(page),
+      parseInt(limit),
+      search
+    );
 
     res.status(200).json({
       success: true,
-      count: users.length,
-      data: users,
+      count: result.total,
+      page: result.page,
+      totalPages: result.totalPages,
+      data: result.users,
     });
   } catch (error) {
     res.status(400).json({
@@ -184,6 +193,61 @@ exports.deleteUser = async (req, res) => {
     res.status(200).json({
       success: true,
       data: result,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Create new user (admin only)
+ * @route   POST /api/users
+ * @access  Admin
+ */
+exports.createUser = async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      address,
+      city,
+      state,
+      zipcode,
+      phone,
+      role,
+    } = req.body;
+
+    // Validate input
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Please provide all required fields (firstName, lastName, email, password)",
+      });
+    }
+
+    // Create user with specified role (admin can set role)
+    const user = await userService.registerUser({
+      firstName,
+      lastName,
+      email,
+      password,
+      address,
+      city,
+      state,
+      zipcode,
+      phone,
+      role: role || "student", // Default to student if not specified
+    });
+
+    res.status(201).json({
+      success: true,
+      data: user,
     });
   } catch (error) {
     res.status(400).json({

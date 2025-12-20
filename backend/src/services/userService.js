@@ -89,12 +89,37 @@ class UserService {
   }
 
   /**
-   * Get all users
+   * Get all users with pagination and search
    */
-  async getAllUsers() {
+  async getAllUsers(page = 1, limit = 10, search = "") {
     try {
-      const users = await userRepository.findAll();
-      return users;
+      const skip = (page - 1) * limit;
+
+      // Build search filter
+      let filter = {};
+      if (search) {
+        filter = {
+          $or: [
+            { firstName: { $regex: search, $options: "i" } },
+            { lastName: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        };
+      }
+
+      const users = await userRepository.findWithPagination(
+        filter,
+        skip,
+        limit
+      );
+      const total = await userRepository.count(filter);
+
+      return {
+        users,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      };
     } catch (error) {
       throw error;
     }
@@ -137,6 +162,22 @@ class UserService {
    */
   async deleteUser(id) {
     try {
+      // Get the user to be deleted
+      const userToDelete = await userRepository.findById(id);
+      if (!userToDelete) {
+        throw new Error("User not found");
+      }
+
+      // If the user is an admin, check if they're the last admin
+      if (userToDelete.role === "admin") {
+        const adminCount = await userRepository.count({ role: "admin" });
+        if (adminCount <= 1) {
+          throw new Error(
+            "Cannot delete the last admin user. At least one admin must remain in the system."
+          );
+        }
+      }
+
       const user = await userRepository.delete(id);
       if (!user) {
         throw new Error("User not found");

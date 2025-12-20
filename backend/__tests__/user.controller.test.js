@@ -49,7 +49,8 @@ describe("User Controller", () => {
         "userId123",
         "student",
         "john@example.com",
-        "John"
+        "John",
+        "Doe"
       );
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -108,12 +109,12 @@ describe("User Controller", () => {
         state: "NY",
         zipcode: "10001",
         phone: "123-456-7890",
-        role: "faculty",
       };
 
       const mockUser = {
         _id: "userId123",
         ...userData,
+        role: "student",
       };
 
       mockReq.body = userData;
@@ -136,6 +137,7 @@ describe("User Controller", () => {
       const mockUser = {
         _id: "userId123",
         firstName: "John",
+        lastName: "Doe",
         email: "john@example.com",
         role: "student",
       };
@@ -154,7 +156,8 @@ describe("User Controller", () => {
         "userId123",
         "student",
         "john@example.com",
-        "John"
+        "John",
+        "Doe"
       );
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({

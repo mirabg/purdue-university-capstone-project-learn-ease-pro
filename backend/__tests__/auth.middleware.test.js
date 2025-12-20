@@ -28,7 +28,8 @@ describe("Auth Middleware", () => {
         "userId123",
         "student",
         "student@test.com",
-        "John"
+        "John",
+        "Doe"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
 
@@ -40,6 +41,7 @@ describe("Auth Middleware", () => {
       expect(mockReq.user.role).toBe("student");
       expect(mockReq.user.email).toBe("student@test.com");
       expect(mockReq.user.firstName).toBe("John");
+      expect(mockReq.user.lastName).toBe("Doe");
     });
 
     it("should reject request without authorization header", () => {
@@ -87,7 +89,8 @@ describe("Auth Middleware", () => {
         "adminId",
         "admin",
         "admin@test.com",
-        "Admin"
+        "Admin",
+        "User"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
 
@@ -97,6 +100,7 @@ describe("Auth Middleware", () => {
       expect(mockReq.user.role).toBe("admin");
       expect(mockReq.user.email).toBe("admin@test.com");
       expect(mockReq.user.firstName).toBe("Admin");
+      expect(mockReq.user.lastName).toBe("User");
     });
 
     it("should reject request with student role", () => {
@@ -104,7 +108,8 @@ describe("Auth Middleware", () => {
         "studentId",
         "student",
         "student@test.com",
-        "Student"
+        "Student",
+        "User"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
 
@@ -123,7 +128,8 @@ describe("Auth Middleware", () => {
         "facultyId",
         "faculty",
         "faculty@test.com",
-        "Faculty"
+        "Faculty",
+        "Member"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
 
@@ -147,7 +153,8 @@ describe("Auth Middleware", () => {
         "adminId",
         "admin",
         "admin@test.com",
-        "Admin"
+        "Admin",
+        "User"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = "differentUserId";
@@ -159,6 +166,7 @@ describe("Auth Middleware", () => {
       expect(mockReq.user.role).toBe("admin");
       expect(mockReq.user.email).toBe("admin@test.com");
       expect(mockReq.user.firstName).toBe("Admin");
+      expect(mockReq.user.lastName).toBe("User");
     });
 
     it("should allow user to access their own resource", () => {
@@ -167,7 +175,8 @@ describe("Auth Middleware", () => {
         userId,
         "student",
         "student@test.com",
-        "Student"
+        "Student",
+        "User"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = userId;
@@ -179,6 +188,7 @@ describe("Auth Middleware", () => {
       expect(mockReq.user.id).toBe(userId);
       expect(mockReq.user.email).toBe("student@test.com");
       expect(mockReq.user.firstName).toBe("Student");
+      expect(mockReq.user.lastName).toBe("User");
     });
 
     it("should reject non-admin user accessing another user resource", () => {
@@ -186,7 +196,8 @@ describe("Auth Middleware", () => {
         "userId123",
         "student",
         "student@test.com",
-        "Student"
+        "Student",
+        "User"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = "differentUserId";
@@ -208,7 +219,8 @@ describe("Auth Middleware", () => {
         "facultyId",
         "faculty",
         "faculty@test.com",
-        "Faculty"
+        "Faculty",
+        "Member"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = "studentId";
@@ -226,7 +238,8 @@ describe("Auth Middleware", () => {
         userId,
         "student",
         "student@test.com",
-        "Student"
+        "Student",
+        "User"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.userId = userId;
@@ -253,7 +266,8 @@ describe("Auth Middleware", () => {
         userId,
         "student",
         "student@test.com",
-        "Student"
+        "Student",
+        "User"
       );
       mockReq.headers.authorization = `Bearer ${token}`;
       // No params.id set

@@ -41,8 +41,8 @@ describe("User Routes Integration Tests", () => {
     // Clear database before each test
     await User.deleteMany({});
 
-    // Create admin user and get token
-    const adminRes = await request(app).post("/api/users/register").send({
+    // Create admin user directly in database with admin role
+    adminUser = await User.create({
       firstName: "Admin",
       lastName: "User",
       email: "admin@test.com",
@@ -50,15 +50,18 @@ describe("User Routes Integration Tests", () => {
       role: "admin",
     });
 
-    if (adminRes.body.success) {
-      adminToken = adminRes.body.token;
-      adminUser = adminRes.body.data;
-    } else {
-      console.error("Failed to create admin user:", adminRes.body);
-    }
+    // Generate token for admin
+    const { generateToken } = require("../../src/config/jwt");
+    adminToken = generateToken(
+      adminUser._id.toString(),
+      adminUser.role,
+      adminUser.email,
+      adminUser.firstName,
+      adminUser.lastName
+    );
 
-    // Create student user and get token
-    const studentRes = await request(app).post("/api/users/register").send({
+    // Create student user directly in database
+    studentUser = await User.create({
       firstName: "Student",
       lastName: "User",
       email: "student@test.com",
@@ -66,15 +69,16 @@ describe("User Routes Integration Tests", () => {
       role: "student",
     });
 
-    if (studentRes.body.success) {
-      studentToken = studentRes.body.token;
-      studentUser = studentRes.body.data;
-    } else {
-      console.error("Failed to create student user:", studentRes.body);
-    }
+    studentToken = generateToken(
+      studentUser._id.toString(),
+      studentUser.role,
+      studentUser.email,
+      studentUser.firstName,
+      studentUser.lastName
+    );
 
-    // Create faculty user and get token
-    const facultyRes = await request(app).post("/api/users/register").send({
+    // Create faculty user directly in database
+    facultyUser = await User.create({
       firstName: "Faculty",
       lastName: "User",
       email: "faculty@test.com",
@@ -82,12 +86,13 @@ describe("User Routes Integration Tests", () => {
       role: "faculty",
     });
 
-    if (facultyRes.body.success) {
-      facultyToken = facultyRes.body.token;
-      facultyUser = facultyRes.body.data;
-    } else {
-      console.error("Failed to create faculty user:", facultyRes.body);
-    }
+    facultyToken = generateToken(
+      facultyUser._id.toString(),
+      facultyUser.role,
+      facultyUser.email,
+      facultyUser.firstName,
+      facultyUser.lastName
+    );
   });
 
   describe("POST /api/users/register", () => {
@@ -142,7 +147,6 @@ describe("User Routes Integration Tests", () => {
         state: "MA",
         zipcode: "02101",
         phone: "617-555-1234",
-        role: "faculty",
       });
 
       expect(res.status).toBe(201);
@@ -151,7 +155,7 @@ describe("User Routes Integration Tests", () => {
       expect(res.body.data.state).toBe("MA");
       expect(res.body.data.zipcode).toBe("02101");
       expect(res.body.data.phone).toBe("617-555-1234");
-      expect(res.body.data.role).toBe("faculty");
+      expect(res.body.data.role).toBe("student"); // All new registrations get student role
     });
 
     it("should return 400 for missing required fields", async () => {
@@ -336,7 +340,7 @@ describe("User Routes Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data._id).toBe(studentUser._id);
+      expect(res.body.data._id).toBe(studentUser._id.toString());
       expect(res.body.data.email).toBe("student@test.com");
     });
 
@@ -347,7 +351,7 @@ describe("User Routes Integration Tests", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data._id).toBe(studentUser._id);
+      expect(res.body.data._id).toBe(studentUser._id.toString());
     });
 
     it("should return 403 when student tries to get another user", async () => {

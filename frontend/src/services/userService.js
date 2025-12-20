@@ -6,11 +6,23 @@ import api from "./api";
  */
 export const userService = {
   /**
-   * Get all users
-   * @returns {Promise} List of users
+   * Get all users with pagination and search
+   * @param {number} page - Page number
+   * @param {number} limit - Items per page
+   * @param {string} search - Search query
+   * @returns {Promise} List of users with pagination info
    */
-  getAllUsers: async () => {
-    const response = await api.get("/users");
+  getAllUsers: async (page = 1, limit = 10, search = "") => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (search) {
+      params.append("search", search);
+    }
+
+    const response = await api.get(`/users?${params.toString()}`);
     return response.data;
   },
 
@@ -21,6 +33,16 @@ export const userService = {
    */
   getUserById: async (id) => {
     const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Create new user
+   * @param {Object} userData - User data
+   * @returns {Promise} Created user data
+   */
+  createUser: async (userData) => {
+    const response = await api.post("/users", userData);
     return response.data;
   },
 

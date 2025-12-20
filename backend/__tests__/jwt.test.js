@@ -7,8 +7,9 @@ describe("JWT Utilities", () => {
       const role = "student";
       const email = "student@test.com";
       const firstName = "John";
+      const lastName = "Doe";
 
-      const token = generateToken(userId, role, email, firstName);
+      const token = generateToken(userId, role, email, firstName, lastName);
 
       expect(token).toBeDefined();
       expect(typeof token).toBe("string");
@@ -20,13 +21,15 @@ describe("JWT Utilities", () => {
         "user1",
         "student",
         "user1@test.com",
-        "User"
+        "User",
+        "One"
       );
       const token2 = generateToken(
         "user2",
         "faculty",
         "user2@test.com",
-        "User"
+        "User",
+        "Two"
       );
 
       expect(token1).not.toBe(token2);
@@ -37,13 +40,15 @@ describe("JWT Utilities", () => {
         "adminId",
         "admin",
         "admin@test.com",
-        "Admin"
+        "Admin",
+        "User"
       );
       const decoded = verifyToken(token);
 
       expect(decoded.role).toBe("admin");
       expect(decoded.email).toBe("admin@test.com");
       expect(decoded.firstName).toBe("Admin");
+      expect(decoded.lastName).toBe("User");
     });
   });
 
@@ -53,7 +58,8 @@ describe("JWT Utilities", () => {
       const role = "student";
       const email = "student@test.com";
       const firstName = "John";
-      const token = generateToken(userId, role, email, firstName);
+      const lastName = "Doe";
+      const token = generateToken(userId, role, email, firstName, lastName);
 
       const decoded = verifyToken(token);
 
@@ -62,6 +68,7 @@ describe("JWT Utilities", () => {
       expect(decoded.role).toBe(role);
       expect(decoded.email).toBe(email);
       expect(decoded.firstName).toBe(firstName);
+      expect(decoded.lastName).toBe(lastName);
       expect(decoded.iat).toBeDefined(); // Issued at
       expect(decoded.exp).toBeDefined(); // Expiration
     });
@@ -91,7 +98,8 @@ describe("JWT Utilities", () => {
         "userId",
         "student",
         "student@test.com",
-        "Student"
+        "Student",
+        "User"
       );
       const decoded = verifyToken(token);
 
@@ -103,36 +111,40 @@ describe("JWT Utilities", () => {
       expect(expiresIn).toBeLessThan(87000);
     });
 
-    it("should preserve user id, role, email, and firstName in token", () => {
+    it("should preserve user id, role, email, firstName, and lastName in token", () => {
       const testCases = [
         {
           id: "user123",
           role: "student",
           email: "student@test.com",
           firstName: "Student",
+          lastName: "User",
         },
         {
           id: "admin456",
           role: "admin",
           email: "admin@test.com",
           firstName: "Admin",
+          lastName: "User",
         },
         {
           id: "faculty789",
           role: "faculty",
           email: "faculty@test.com",
           firstName: "Faculty",
+          lastName: "Member",
         },
       ];
 
-      testCases.forEach(({ id, role, email, firstName }) => {
-        const token = generateToken(id, role, email, firstName);
+      testCases.forEach(({ id, role, email, firstName, lastName }) => {
+        const token = generateToken(id, role, email, firstName, lastName);
         const decoded = verifyToken(token);
 
         expect(decoded.id).toBe(id);
         expect(decoded.role).toBe(role);
         expect(decoded.email).toBe(email);
         expect(decoded.firstName).toBe(firstName);
+        expect(decoded.lastName).toBe(lastName);
       });
     });
   });
@@ -143,9 +155,10 @@ describe("JWT Utilities", () => {
       const role = "faculty";
       const email = "faculty@test.com";
       const firstName = "Faculty";
+      const lastName = "Member";
 
       // Generate
-      const token = generateToken(userId, role, email, firstName);
+      const token = generateToken(userId, role, email, firstName, lastName);
       expect(token).toBeDefined();
 
       // Verify
@@ -155,18 +168,27 @@ describe("JWT Utilities", () => {
       expect(decoded.role).toBe(role);
       expect(decoded.email).toBe(email);
       expect(decoded.firstName).toBe(firstName);
+      expect(decoded.lastName).toBe(lastName);
     });
 
     it("should handle special characters in user id and email", () => {
       const userId = "507f1f77bcf86cd799439011";
       const email = "test+user@example.com";
       const firstName = "Test User";
-      const token = generateToken(userId, "student", email, firstName);
+      const lastName = "Test";
+      const token = generateToken(
+        userId,
+        "student",
+        email,
+        firstName,
+        lastName
+      );
       const decoded = verifyToken(token);
 
       expect(decoded.id).toBe(userId);
       expect(decoded.email).toBe(email);
       expect(decoded.firstName).toBe(firstName);
+      expect(decoded.lastName).toBe(lastName);
     });
 
     it("should return null for expired token", () => {
@@ -178,6 +200,7 @@ describe("JWT Utilities", () => {
           role: "student",
           email: "student@test.com",
           firstName: "Student",
+          lastName: "User",
         },
         process.env.JWT_SECRET,
         { expiresIn: "0s" } // Already expired
@@ -196,6 +219,7 @@ describe("JWT Utilities", () => {
           role: "student",
           email: "student@test.com",
           firstName: "Student",
+          lastName: "User",
         },
         "wrong-secret-key",
         { expiresIn: "1d" }
