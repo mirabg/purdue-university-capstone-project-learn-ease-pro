@@ -14,31 +14,29 @@ function Header() {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-28">
+        <div className="flex justify-center items-center h-28 relative">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img
-              src="/images/logo.svg"
-              alt="LearnEase Pro"
-              className="h-24 w-auto"
-            />
+            <img src="/images/logo.svg" alt="Logo" className="h-24 w-auto" />
           </Link>
 
           {/* User Info and Logout */}
           {isAuthenticated && user && (
-            <div className="flex items-center gap-8">
+            <div className="absolute right-0 flex items-center gap-8">
               <div className="text-sm text-gray-700">
                 <div>
                   <span className="font-bold">User:</span>{" "}
                   <span className="font-medium">
-                    {user.firstName +
-                      " " +
-                      (user.lastName ? user.lastName : "") || user.email}
+                    {user.firstName && user.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : user.firstName || user.email}
                   </span>
                 </div>
                 <div>
                   <span className="font-bold">Role:</span>{" "}
-                  <span className="font-medium capitalize">{user.role}</span>
+                  <span className="font-medium">
+                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  </span>
                 </div>
               </div>
               <button

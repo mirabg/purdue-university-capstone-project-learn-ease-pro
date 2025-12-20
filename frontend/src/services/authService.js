@@ -15,6 +15,9 @@ export const authService = {
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
     }
+    if (response.data.user) {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
     return response.data;
   },
 
@@ -28,6 +31,9 @@ export const authService = {
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
     }
+    if (response.data.user) {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
     return response.data;
   },
 
@@ -36,6 +42,7 @@ export const authService = {
    */
   logout: () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   },
 
   /**
@@ -43,6 +50,17 @@ export const authService = {
    * @returns {Object|null} User data from token
    */
   getCurrentUser: () => {
+    // Try to get user from localStorage first
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (error) {
+        // If parsing fails, fall through to token decode
+      }
+    }
+
+    // Fall back to decoding token
     const token = localStorage.getItem("token");
     if (!token) return null;
 

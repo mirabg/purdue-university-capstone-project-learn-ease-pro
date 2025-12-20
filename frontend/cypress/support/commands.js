@@ -55,3 +55,45 @@ Cypress.Commands.add("shouldBeLoggedOut", () => {
 Cypress.Commands.add("waitForApiResponse", (alias, statusCode = 200) => {
   cy.wait(alias).its("response.statusCode").should("eq", statusCode);
 });
+
+/**
+ * Custom command to login as admin user
+ * @example cy.loginAsAdmin()
+ */
+Cypress.Commands.add("loginAsAdmin", () => {
+  const adminToken =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IlVzZXIifQ.test";
+  const adminUser = {
+    id: "1",
+    email: "admin@example.com",
+    role: "admin",
+    firstName: "Admin",
+    lastName: "User",
+  };
+
+  cy.window().then((window) => {
+    window.localStorage.setItem("token", adminToken);
+    window.localStorage.setItem("user", JSON.stringify(adminUser));
+  });
+});
+
+/**
+ * Custom command to login as student user
+ * @example cy.loginAsStudent()
+ */
+Cypress.Commands.add("loginAsStudent", () => {
+  const studentToken =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJlbWFpbCI6InN0dWRlbnRAZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImZpcnN0TmFtZSI6IlN0dWRlbnQiLCJsYXN0TmFtZSI6IlVzZXIifQ.test";
+  const studentUser = {
+    id: "2",
+    email: "student@example.com",
+    role: "student",
+    firstName: "Student",
+    lastName: "User",
+  };
+
+  cy.window().then((window) => {
+    window.localStorage.setItem("token", studentToken);
+    window.localStorage.setItem("user", JSON.stringify(studentUser));
+  });
+});

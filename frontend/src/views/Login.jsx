@@ -1,15 +1,23 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { authService } from "@services/authService";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Check if there's a message from redirect
+    if (location.state?.message) {
+      setError(location.state.message);
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,11 +38,14 @@ function Login() {
     authService
       .login(formData)
       .then((response) => {
+        // Get user from response or decode token
+        const user = response.user || authService.getCurrentUser();
+
         // Redirect based on user role
-        if (authService.isAdmin()) {
+        if (user && user.role === "admin") {
           navigate("/admin/dashboard");
         } else {
-          navigate("/dashboard");
+          navigate("/student/dashboard");
         }
       })
       .catch((err) => {
@@ -110,11 +121,31 @@ function Login() {
                 className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 ease-in-out"
                 placeholder="Enter your password"
               />
-              {/* Error Message */}
-              {error && (
-                <p className="mt-6 text-sm text-red-600 text-center">{error}</p>
-              )}
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm font-medium text-red-800">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Forgot Password */}
 
@@ -160,12 +191,12 @@ function Login() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <a
-                href="/register"
+              <Link
+                to="/register"
                 className="font-medium text-primary-600 hover:text-primary-500 transition duration-150 ease-in-out"
               >
                 Create an account
-              </a>
+              </Link>
             </p>
           </div>
         </div>

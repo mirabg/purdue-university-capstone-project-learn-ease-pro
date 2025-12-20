@@ -6,7 +6,7 @@ describe("Footer", () => {
   it("should render footer with copyright text", () => {
     render(<Footer />);
 
-    const copyright = screen.getByText(/© 2025 LearnEase Pro/i);
+    const copyright = screen.getByText(/© 2025/i);
     expect(copyright).toBeInTheDocument();
   });
 

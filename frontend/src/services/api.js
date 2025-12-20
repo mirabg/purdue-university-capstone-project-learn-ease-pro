@@ -27,8 +27,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear token if unauthorized
+      // Clear token and user if unauthorized
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
 
       // Only redirect to login if not already on login page
       if (!window.location.pathname.includes("/login")) {

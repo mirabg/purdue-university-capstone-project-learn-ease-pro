@@ -14,17 +14,20 @@ vi.mock("@services/authService", () => ({
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
+const mockLocation = { state: null };
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation,
   };
 });
 
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLocation.state = null;
   });
 
   it("should render login form", () => {
@@ -39,6 +42,20 @@ describe("Login", () => {
     expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Sign In/i })
+    ).toBeInTheDocument();
+  });
+
+  it("should display error message from location state", () => {
+    mockLocation.state = { message: "Session expired. Please log in again." };
+
+    render(
+      <BrowserRouter>
+        <Login />
+      </BrowserRouter>
+    );
+
+    expect(
+      screen.getByText(/Session expired. Please log in again./i)
     ).toBeInTheDocument();
   });
 
@@ -86,7 +103,10 @@ describe("Login", () => {
   });
 
   it("should navigate to admin dashboard for admin users", async () => {
-    authService.login.mockResolvedValue({ token: "admin-token" });
+    authService.login.mockResolvedValue({
+      token: "admin-token",
+      user: { role: "admin" },
+    });
     authService.isAdmin.mockReturnValue(true);
 
     render(
@@ -109,7 +129,10 @@ describe("Login", () => {
   });
 
   it("should navigate to regular dashboard for non-admin users", async () => {
-    authService.login.mockResolvedValue({ token: "user-token" });
+    authService.login.mockResolvedValue({
+      token: "user-token",
+      user: { role: "student" },
+    });
     authService.isAdmin.mockReturnValue(false);
 
     render(
@@ -127,7 +150,7 @@ describe("Login", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
+      expect(mockNavigate).toHaveBeenCalledWith("/student/dashboard");
     });
   });
 

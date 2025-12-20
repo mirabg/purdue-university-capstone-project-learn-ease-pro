@@ -1,10 +1,14 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { authService } from "@services/authService";
 
 function Unauthorized() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const attemptedPath = location.state?.from || "the requested page";
+  const user = authService.getCurrentUser();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-red-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           {/* Warning Icon */}
@@ -25,11 +29,13 @@ function Unauthorized() {
           </div>
 
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Access Denied
+            Unauthorized Access
           </h2>
+          <p className="text-gray-600 mb-2">
+            You do not have permission to access this page
+          </p>
           <p className="text-gray-600 mb-8">
-            You don't have permission to access this page. This area is
-            restricted to administrators only.
+            This area is restricted to administrators only.
           </p>
         </div>
 
@@ -81,10 +87,18 @@ function Unauthorized() {
                 Go Back
               </button>
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  if (user && user.role === "admin") {
+                    navigate("/admin/dashboard");
+                  } else if (user) {
+                    navigate("/student/dashboard");
+                  } else {
+                    navigate("/login");
+                  }
+                }}
                 className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
               >
-                Return to Login
+                Go to Dashboard
               </button>
             </div>
           </div>

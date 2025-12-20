@@ -38,7 +38,7 @@ describe("Header", () => {
       </BrowserRouter>
     );
 
-    const logo = screen.getByAltText("LearnEase Pro");
+    const logo = screen.getByAltText("Logo");
     expect(logo).toBeInTheDocument();
   });
 
@@ -77,7 +77,7 @@ describe("Header", () => {
     expect(screen.getByText(/User:/)).toBeInTheDocument();
     expect(screen.getByText(/John Doe/)).toBeInTheDocument();
     expect(screen.getByText(/Role:/)).toBeInTheDocument();
-    expect(screen.getByText(/admin/)).toBeInTheDocument();
+    expect(screen.getByText(/Admin/)).toBeInTheDocument();
   });
 
   it("should handle logout", () => {
@@ -139,6 +139,6 @@ describe("Header", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/admin/i)).toBeInTheDocument();
+    expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 });

@@ -30,7 +30,7 @@ describe("Login Feature", () => {
     });
 
     it("should display the logo", () => {
-      cy.get('img[alt="LearnEase Pro"]').should("be.visible");
+      cy.get('img[alt="Logo"]').should("be.visible");
     });
 
     it("should have proper input placeholders", () => {
@@ -192,7 +192,7 @@ describe("Login Feature", () => {
       cy.contains("User:").should("be.visible");
       cy.contains("Admin User").should("be.visible");
       cy.contains("Role:").should("be.visible");
-      cy.contains("admin").should("be.visible");
+      cy.contains("Admin").should("be.visible");
       cy.contains("button", "Logout").should("be.visible");
     });
   });
