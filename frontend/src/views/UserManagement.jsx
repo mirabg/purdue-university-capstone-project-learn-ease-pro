@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { userService } from "@services/userService";
+import { authService } from "@services/authService";
 import UserModal from "@components/UserModal";
 
 function UserManagement() {
@@ -15,6 +16,17 @@ function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const itemsPerPage = 10;
+
+  // Get dashboard URL based on user role
+  const getDashboardUrl = () => {
+    const user = authService.getCurrentUser();
+    if (user?.role === "admin") {
+      return "/admin/dashboard";
+    } else if (user?.role === "faculty") {
+      return "/faculty/dashboard";
+    }
+    return "/student/dashboard";
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -108,7 +120,7 @@ function UserManagement() {
         {/* Back Button */}
         <div className="mb-4">
           <button
-            onClick={() => navigate("/admin/dashboard")}
+            onClick={() => navigate(getDashboardUrl())}
             className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
           >
             <svg

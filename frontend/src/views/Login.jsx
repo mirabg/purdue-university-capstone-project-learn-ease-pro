@@ -44,6 +44,8 @@ function Login() {
         // Redirect based on user role
         if (user && user.role === "admin") {
           navigate("/admin/dashboard");
+        } else if (user && user.role === "faculty") {
+          navigate("/faculty/dashboard");
         } else {
           navigate("/student/dashboard");
         }

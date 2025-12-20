@@ -44,7 +44,7 @@ class CourseRepository {
    */
   async findAll(filter = {}) {
     try {
-      const courses = await Course.find(filter).sort({ createdAt: -1 });
+      const courses = await Course.find(filter).sort({ courseCode: 1 });
       return courses;
     } catch (error) {
       throw error;
@@ -59,7 +59,7 @@ class CourseRepository {
       const courses = await Course.find(filter)
         .skip(skip)
         .limit(limit)
-        .sort({ createdAt: -1 });
+        .sort({ courseCode: 1 });
       return courses;
     } catch (error) {
       throw error;

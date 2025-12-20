@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const courseController = require("../controllers/courseController");
+const uploadController = require("../controllers/uploadController");
+const upload = require("../middleware/upload");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 // Helper middleware to check if user is admin or faculty
@@ -32,6 +34,15 @@ router.put(
 );
 router.delete("/:id", requireAuth, requireAdmin, courseController.deleteCourse);
 
+// File upload for course materials
+router.post(
+  "/:id/upload",
+  requireAuth,
+  requireAdminOrFaculty,
+  upload.single("file"),
+  uploadController.uploadCourseMaterial
+);
+
 // Course details operations
 router.post(
   "/:id/details",
@@ -51,6 +62,12 @@ router.delete(
   requireAuth,
   requireAdminOrFaculty,
   courseController.deleteCourseDetail
+);
+router.delete(
+  "/materials/:detailId",
+  requireAuth,
+  requireAdminOrFaculty,
+  uploadController.deleteCourseMaterial
 );
 
 // Course feedback operations

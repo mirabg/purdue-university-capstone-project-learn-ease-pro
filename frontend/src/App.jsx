@@ -4,10 +4,13 @@ import Footer from "@components/Footer";
 import Login from "@views/Login";
 import Register from "@views/Register";
 import AdminDashboard from "@views/AdminDashboard";
+import FacultyDashboard from "@views/FacultyDashboard";
 import StudentDashboard from "@views/StudentDashboard";
 import UserManagement from "@views/UserManagement";
+import CourseManagement from "@views/CourseManagement";
 import Unauthorized from "@views/Unauthorized";
 import AdminRoute from "@components/AdminRoute";
+import FacultyRoute from "@components/FacultyRoute";
 import PrivateRoute from "@components/PrivateRoute";
 
 function App() {
@@ -29,6 +32,22 @@ function App() {
             }
           />
           <Route
+            path="/faculty/dashboard"
+            element={
+              <FacultyRoute>
+                <FacultyDashboard />
+              </FacultyRoute>
+            }
+          />
+          <Route
+            path="/faculty/courses"
+            element={
+              <FacultyRoute>
+                <CourseManagement />
+              </FacultyRoute>
+            }
+          />
+          <Route
             path="/admin/dashboard"
             element={
               <AdminRoute>
@@ -41,6 +60,14 @@ function App() {
             element={
               <AdminRoute>
                 <UserManagement />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/courses"
+            element={
+              <AdminRoute>
+                <CourseManagement />
               </AdminRoute>
             }
           />

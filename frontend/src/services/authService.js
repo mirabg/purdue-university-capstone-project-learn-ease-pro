@@ -91,6 +91,15 @@ export const authService = {
     const user = authService.getCurrentUser();
     return user && user.role === "admin";
   },
+
+  /**
+   * Check if current user is a faculty member
+   * @returns {boolean}
+   */
+  isFaculty: () => {
+    const user = authService.getCurrentUser();
+    return user && user.role === "faculty";
+  },
 };
 
 export default authService;

@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "@services/authService";
 import { userService } from "@services/userService";
+import { courseService } from "@services/courseService";
 
 function AdminDashboard() {
   const [user, setUser] = useState(null);
   const [totalUsers, setTotalUsers] = useState(null);
+  const [totalCourses, setTotalCourses] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -13,15 +15,20 @@ function AdminDashboard() {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
 
-    // Fetch total users count
+    // Fetch total users and courses count
     const fetchStats = async () => {
       try {
-        const response = await userService.getAllUsers(1, 1);
-        if (response.success) {
-          setTotalUsers(response.count);
+        const usersResponse = await userService.getAllUsers(1, 1);
+        if (usersResponse.success) {
+          setTotalUsers(usersResponse.count);
+        }
+
+        const coursesResponse = await courseService.getAllCourses(1, 1);
+        if (coursesResponse.success) {
+          setTotalCourses(coursesResponse.count);
         }
       } catch (error) {
-        console.error("Error fetching user stats:", error);
+        console.error("Error fetching stats:", error);
       }
     };
 
@@ -94,7 +101,9 @@ function AdminDashboard() {
                   <dt className="text-sm font-medium text-gray-500 truncate">
                     Total Courses
                   </dt>
-                  <dd className="text-2xl font-semibold text-gray-900">-</dd>
+                  <dd className="text-2xl font-semibold text-gray-900">
+                    {totalCourses !== null ? totalCourses : "-"}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -155,7 +164,10 @@ function AdminDashboard() {
                 </svg>
                 Manage Users
               </button>
-              <button className="inline-flex items-center justify-center px-6 py-4 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+              <button
+                onClick={() => navigate("/admin/courses")}
+                className="inline-flex items-center justify-center px-6 py-4 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition"
+              >
                 <svg
                   className="mr-3 h-6 w-6"
                   fill="none"

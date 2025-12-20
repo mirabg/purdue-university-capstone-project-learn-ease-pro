@@ -190,6 +190,21 @@ class CourseService {
   }
 
   /**
+   * Get course detail by ID
+   */
+  async getCourseDetailById(id) {
+    try {
+      const detail = await courseDetailRepository.findById(id);
+      if (!detail) {
+        throw new Error("Course detail not found");
+      }
+      return detail;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Update course detail
    */
   async updateCourseDetail(id, updateData) {
