@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const userRoutes = require("./userRoutes");
+const courseRoutes = require("./courseRoutes");
 
 // API routes
 router.use("/users", userRoutes);
+router.use("/courses", courseRoutes);
 
 // Health check route
 router.get("/health", (req, res) => {

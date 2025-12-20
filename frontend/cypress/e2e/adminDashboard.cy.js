@@ -1,6 +1,7 @@
 describe("Admin Dashboard", () => {
   beforeEach(() => {
     // Login as admin before each test
+    cy.visit("/login");
     cy.loginAsAdmin();
     cy.visit("/admin/dashboard");
   });
@@ -63,7 +64,8 @@ describe("Admin Dashboard", () => {
     });
 
     it("should display admin user info in header", () => {
-      cy.contains("Admin").should("be.visible");
+      // Should display the user's name (Admin User) and role (Admin)
+      cy.contains("Admin User").should("be.visible");
       cy.contains("Admin").should("be.visible");
     });
   });
@@ -117,14 +119,12 @@ describe("Admin Dashboard", () => {
   describe("Error Handling", () => {
     it("should handle unauthorized access gracefully", () => {
       // Clear token to simulate unauthorized access
-      cy.window().then((window) => {
-        window.localStorage.removeItem("token");
-      });
+      cy.clearLocalStorage();
 
       cy.visit("/admin/dashboard");
 
-      // Should redirect to unauthorized or login page
-      cy.url().should("match", /\/(login|unauthorized)/);
+      // Should redirect to login page
+      cy.url().should("include", "/login");
     });
   });
 
@@ -164,6 +164,7 @@ describe("Admin Dashboard - Access Control", () => {
   describe("Non-Admin User Access", () => {
     it("should redirect regular user to unauthorized page", () => {
       // Login as regular user
+      cy.visit("/login");
       cy.loginAsStudent();
       cy.visit("/admin/dashboard");
 
@@ -175,16 +176,15 @@ describe("Admin Dashboard - Access Control", () => {
 
   describe("Unauthenticated User Access", () => {
     it("should redirect unauthenticated user to login page", () => {
+      cy.clearLocalStorage();
       cy.visit("/admin/dashboard");
 
-      // Should be redirected to login or unauthorized
-      cy.url().should("match", /\/(login|unauthorized)/);
+      // Should be redirected to login
+      cy.url().should("include", "/login");
     });
 
     it("should not allow access without valid token", () => {
-      cy.window().then((window) => {
-        window.localStorage.removeItem("token");
-      });
+      cy.clearLocalStorage();
 
       cy.visit("/admin/dashboard");
       cy.url().should("not.include", "/admin/dashboard");

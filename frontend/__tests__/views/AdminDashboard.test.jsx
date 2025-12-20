@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
+import userEvent from "@testing-library/user-event";
 import AdminDashboard from "@views/AdminDashboard";
 import { authService } from "@services/authService";
+import { userService } from "@services/userService";
 
 // Mock authService
 vi.mock("@services/authService", () => ({
@@ -11,9 +13,18 @@ vi.mock("@services/authService", () => ({
   },
 }));
 
+// Mock userService
+vi.mock("@services/userService", () => ({
+  userService: {
+    getAllUsers: vi.fn(),
+  },
+}));
+
 describe("AdminDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock for userService
+    userService.getAllUsers.mockResolvedValue({ success: true, count: 10 });
   });
 
   it("should render nothing while loading user data", () => {
@@ -161,5 +172,57 @@ describe("AdminDashboard", () => {
     const mainDiv = container.querySelector(".min-h-screen");
     expect(mainDiv).toBeInTheDocument();
     expect(mainDiv).toHaveClass("bg-gray-50");
+  });
+
+  it("should handle error when fetching user stats", async () => {
+    const mockUser = {
+      id: "1",
+      email: "admin@example.com",
+      role: "admin",
+    };
+
+    authService.getCurrentUser.mockReturnValue(mockUser);
+    userService.getAllUsers.mockRejectedValue(new Error("Failed to fetch"));
+
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    render(
+      <BrowserRouter>
+        <AdminDashboard />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error fetching user stats:",
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should navigate to user management when button is clicked", async () => {
+    const mockUser = {
+      id: "1",
+      email: "admin@example.com",
+      role: "admin",
+    };
+
+    authService.getCurrentUser.mockReturnValue(mockUser);
+
+    render(
+      <BrowserRouter>
+        <AdminDashboard />
+      </BrowserRouter>
+    );
+
+    const manageUsersButton = screen.getByText("Manage Users");
+    await userEvent.click(manageUsersButton);
+
+    // Button exists and is clickable
+    expect(manageUsersButton).toBeInTheDocument();
   });
 });

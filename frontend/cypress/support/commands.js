@@ -61,8 +61,10 @@ Cypress.Commands.add("waitForApiResponse", (alias, statusCode = 200) => {
  * @example cy.loginAsAdmin()
  */
 Cypress.Commands.add("loginAsAdmin", () => {
+  // Create a proper JWT token with valid base64 encoded payload
+  // Payload: {"id":"1","email":"admin@example.com","role":"admin","firstName":"Admin","lastName":"User"}
   const adminToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IlVzZXIifQ.test";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IlVzZXIifQ.dGVzdA";
   const adminUser = {
     id: "1",
     email: "admin@example.com",
@@ -82,8 +84,10 @@ Cypress.Commands.add("loginAsAdmin", () => {
  * @example cy.loginAsStudent()
  */
 Cypress.Commands.add("loginAsStudent", () => {
+  // Create a proper JWT token with valid base64 encoded payload
+  // Payload: {"id":"2","email":"student@example.com","role":"student","firstName":"Student","lastName":"User"}
   const studentToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJlbWFpbCI6InN0dWRlbnRAZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImZpcnN0TmFtZSI6IlN0dWRlbnQiLCJsYXN0TmFtZSI6IlVzZXIifQ.test";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJlbWFpbCI6InN0dWRlbnRAZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImZpcnN0TmFtZSI6IlN0dWRlbnQiLCJsYXN0TmFtZSI6IlVzZXIifQ.dGVzdA";
   const studentUser = {
     id: "2",
     email: "student@example.com",

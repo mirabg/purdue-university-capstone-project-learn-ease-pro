@@ -21,7 +21,20 @@ describe("userService", () => {
 
       const result = await userService.getAllUsers();
 
-      expect(api.get).toHaveBeenCalledWith("/users");
+      expect(api.get).toHaveBeenCalledWith("/users?page=1&limit=10");
+      expect(result).toEqual(mockUsers);
+    });
+
+    it("should fetch users with search parameter", async () => {
+      const mockUsers = [{ id: "1", email: "john@example.com", role: "user" }];
+
+      api.get.mockResolvedValue({ data: mockUsers });
+
+      const result = await userService.getAllUsers(1, 10, "john");
+
+      expect(api.get).toHaveBeenCalledWith(
+        "/users?page=1&limit=10&search=john"
+      );
       expect(result).toEqual(mockUsers);
     });
 

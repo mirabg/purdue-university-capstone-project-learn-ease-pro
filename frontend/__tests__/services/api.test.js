@@ -108,6 +108,58 @@ describe("API Service", () => {
       await expect(interceptor.rejected(error)).rejects.toEqual(error);
     });
 
+    it("should handle 401 errors and clear storage", async () => {
+      // Set up storage
+      localStorage.setItem("token", "test-token");
+      localStorage.setItem("user", JSON.stringify({ id: 1 }));
+
+      const error = {
+        response: {
+          status: 401,
+        },
+      };
+
+      // Mock window.location
+      delete window.location;
+      window.location = { pathname: "/dashboard", href: "" };
+
+      const interceptor = api.interceptors.response.handlers[0];
+
+      try {
+        await interceptor.rejected(error);
+      } catch (e) {
+        // Expected to reject
+      }
+
+      // Verify storage was cleared
+      expect(localStorage.getItem("token")).toBeFalsy();
+      expect(localStorage.getItem("user")).toBeFalsy();
+      expect(window.location.href).toBe("/login");
+    });
+
+    it("should not redirect if already on login page", async () => {
+      localStorage.setItem("token", "test-token");
+
+      const error = {
+        response: {
+          status: 401,
+        },
+      };
+
+      delete window.location;
+      window.location = { pathname: "/login", href: "/login" };
+
+      const interceptor = api.interceptors.response.handlers[0];
+
+      try {
+        await interceptor.rejected(error);
+      } catch (e) {
+        // Expected to reject
+      }
+
+      expect(window.location.href).toBe("/login");
+    });
+
     it("should have response interceptor handlers defined", () => {
       expect(api.interceptors.response.handlers).toBeDefined();
       expect(api.interceptors.response.handlers.length).toBeGreaterThan(0);

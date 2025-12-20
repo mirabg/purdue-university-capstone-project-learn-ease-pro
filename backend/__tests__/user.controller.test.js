@@ -14,6 +14,7 @@ describe("User Controller", () => {
     mockReq = {
       body: {},
       params: {},
+      query: {},
       headers: {},
     };
     mockRes = {
@@ -205,12 +206,17 @@ describe("User Controller", () => {
 
   describe("getAllUsers", () => {
     it("should get all users successfully", async () => {
-      const mockUsers = [
-        { _id: "user1", firstName: "John", email: "john@example.com" },
-        { _id: "user2", firstName: "Jane", email: "jane@example.com" },
-      ];
+      const mockResult = {
+        users: [
+          { _id: "user1", firstName: "John", email: "john@example.com" },
+          { _id: "user2", firstName: "Jane", email: "jane@example.com" },
+        ],
+        total: 2,
+        page: 1,
+        totalPages: 1,
+      };
 
-      userService.getAllUsers.mockResolvedValue(mockUsers);
+      userService.getAllUsers.mockResolvedValue(mockResult);
 
       await userController.getAllUsers(mockReq, mockRes);
 
@@ -219,12 +225,21 @@ describe("User Controller", () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         count: 2,
-        data: mockUsers,
+        page: 1,
+        totalPages: 1,
+        data: mockResult.users,
       });
     });
 
     it("should handle empty user list", async () => {
-      userService.getAllUsers.mockResolvedValue([]);
+      const mockResult = {
+        users: [],
+        total: 0,
+        page: 1,
+        totalPages: 0,
+      };
+
+      userService.getAllUsers.mockResolvedValue(mockResult);
 
       await userController.getAllUsers(mockReq, mockRes);
 
@@ -232,6 +247,8 @@ describe("User Controller", () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         count: 0,
+        page: 1,
+        totalPages: 0,
         data: [],
       });
     });
@@ -404,6 +421,104 @@ describe("User Controller", () => {
       await userController.deleteUser(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
+    });
+  });
+
+  describe("createUser", () => {
+    it("should create user successfully with all fields", async () => {
+      const userData = {
+        firstName: "Jane",
+        lastName: "Smith",
+        email: "jane@example.com",
+        password: "password123",
+        address: "123 Main St",
+        city: "Boston",
+        state: "MA",
+        zipcode: "02101",
+        phone: "555-1234",
+        role: "instructor",
+      };
+
+      const mockUser = {
+        _id: "userId456",
+        ...userData,
+      };
+
+      mockReq.body = userData;
+      userService.registerUser.mockResolvedValue(mockUser);
+
+      await userController.createUser(mockReq, mockRes);
+
+      expect(userService.registerUser).toHaveBeenCalledWith(userData);
+      expect(mockRes.status).toHaveBeenCalledWith(201);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        data: mockUser,
+      });
+    });
+
+    it("should create user with default student role", async () => {
+      const userData = {
+        firstName: "John",
+        lastName: "Doe",
+        email: "john@example.com",
+        password: "password123",
+      };
+
+      const mockUser = {
+        _id: "userId789",
+        ...userData,
+        role: "student",
+      };
+
+      mockReq.body = userData;
+      userService.registerUser.mockResolvedValue(mockUser);
+
+      await userController.createUser(mockReq, mockRes);
+
+      expect(userService.registerUser).toHaveBeenCalledWith({
+        ...userData,
+        role: "student",
+      });
+      expect(mockRes.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should return 400 for missing required fields", async () => {
+      mockReq.body = {
+        firstName: "John",
+        // Missing lastName, email, password
+      };
+
+      await userController.createUser(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        message:
+          "Please provide all required fields (firstName, lastName, email, password)",
+      });
+      expect(userService.registerUser).not.toHaveBeenCalled();
+    });
+
+    it("should handle service errors", async () => {
+      mockReq.body = {
+        firstName: "John",
+        lastName: "Doe",
+        email: "existing@example.com",
+        password: "password123",
+      };
+
+      userService.registerUser.mockRejectedValue(
+        new Error("Email already in use")
+      );
+
+      await userController.createUser(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Email already in use",
+      });
     });
   });
 });

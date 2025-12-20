@@ -171,21 +171,26 @@ describe("User Service", () => {
         { _id: "user2", firstName: "Jane", email: "jane@example.com" },
       ];
 
-      userRepository.findAll.mockResolvedValue(mockUsers);
+      userRepository.findWithPagination.mockResolvedValue(mockUsers);
+      userRepository.count.mockResolvedValue(2);
 
       const result = await userService.getAllUsers();
 
-      expect(userRepository.findAll).toHaveBeenCalled();
-      expect(result).toEqual(mockUsers);
-      expect(result).toHaveLength(2);
+      expect(userRepository.findWithPagination).toHaveBeenCalled();
+      expect(result.users).toEqual(mockUsers);
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.totalPages).toBe(1);
     });
 
     it("should return empty array when no users exist", async () => {
-      userRepository.findAll.mockResolvedValue([]);
+      userRepository.findWithPagination.mockResolvedValue([]);
+      userRepository.count.mockResolvedValue(0);
 
       const result = await userService.getAllUsers();
 
-      expect(result).toEqual([]);
+      expect(result.users).toEqual([]);
+      expect(result.total).toBe(0);
     });
   });
 
@@ -277,22 +282,61 @@ describe("User Service", () => {
       const mockUser = {
         _id: "userId123",
         firstName: "John",
+        role: "student",
       };
 
+      userRepository.findById.mockResolvedValue(mockUser);
       userRepository.delete.mockResolvedValue(mockUser);
 
       const result = await userService.deleteUser("userId123");
 
+      expect(userRepository.findById).toHaveBeenCalledWith("userId123");
       expect(userRepository.delete).toHaveBeenCalledWith("userId123");
       expect(result.message).toBe("User deleted successfully");
     });
 
     it("should throw error if user not found", async () => {
-      userRepository.delete.mockResolvedValue(null);
+      userRepository.findById.mockResolvedValue(null);
 
       await expect(userService.deleteUser("nonexistent")).rejects.toThrow(
         "User not found"
       );
+    });
+
+    it("should throw error when deleting last admin", async () => {
+      const mockAdmin = {
+        _id: "admin123",
+        firstName: "Admin",
+        role: "admin",
+      };
+
+      userRepository.findById.mockResolvedValue(mockAdmin);
+      userRepository.count.mockResolvedValue(1);
+
+      await expect(userService.deleteUser("admin123")).rejects.toThrow(
+        "Cannot delete the last admin user"
+      );
+
+      expect(userRepository.count).toHaveBeenCalledWith({ role: "admin" });
+      expect(userRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it("should allow deleting an admin when multiple admins exist", async () => {
+      const mockAdmin = {
+        _id: "admin123",
+        firstName: "Admin",
+        role: "admin",
+      };
+
+      userRepository.findById.mockResolvedValue(mockAdmin);
+      userRepository.count.mockResolvedValue(2);
+      userRepository.delete.mockResolvedValue(mockAdmin);
+
+      const result = await userService.deleteUser("admin123");
+
+      expect(userRepository.count).toHaveBeenCalledWith({ role: "admin" });
+      expect(userRepository.delete).toHaveBeenCalledWith("admin123");
+      expect(result.message).toBe("User deleted successfully");
     });
   });
 
@@ -328,7 +372,9 @@ describe("User Service", () => {
     });
 
     it("should propagate repository errors in getAllUsers", async () => {
-      userRepository.findAll.mockRejectedValue(new Error("Database error"));
+      userRepository.findWithPagination.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await expect(userService.getAllUsers()).rejects.toThrow("Database error");
     });
