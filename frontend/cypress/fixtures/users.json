@@ -1,0 +1,24 @@
+{
+  "users": {
+    "admin": {
+      "email": "admin@example.com",
+      "password": "admin123",
+      "role": "admin",
+      "firstName": "Admin",
+      "lastName": "User",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IlVzZXIifQ.test"
+    },
+    "user": {
+      "email": "user@example.com",
+      "password": "user123",
+      "role": "user",
+      "firstName": "Regular",
+      "lastName": "User",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImZpcnN0TmFtZSI6IlJlZ3VsYXIiLCJsYXN0TmFtZSI6IlVzZXIifQ.test"
+    }
+  },
+  "invalidCredentials": {
+    "email": "wrong@example.com",
+    "password": "wrongpassword"
+  }
+}

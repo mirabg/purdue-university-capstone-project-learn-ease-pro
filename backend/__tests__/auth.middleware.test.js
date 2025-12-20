@@ -24,7 +24,12 @@ describe("Auth Middleware", () => {
 
   describe("requireAuth", () => {
     it("should allow request with valid token", () => {
-      const token = generateToken("userId123", "student");
+      const token = generateToken(
+        "userId123",
+        "student",
+        "student@test.com",
+        "John"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
 
       requireAuth(mockReq, mockRes, mockNext);
@@ -33,6 +38,8 @@ describe("Auth Middleware", () => {
       expect(mockReq.user).toBeDefined();
       expect(mockReq.user.id).toBe("userId123");
       expect(mockReq.user.role).toBe("student");
+      expect(mockReq.user.email).toBe("student@test.com");
+      expect(mockReq.user.firstName).toBe("John");
     });
 
     it("should reject request without authorization header", () => {
@@ -76,17 +83,29 @@ describe("Auth Middleware", () => {
 
   describe("requireAdmin", () => {
     it("should allow request with admin role", () => {
-      const token = generateToken("adminId", "admin");
+      const token = generateToken(
+        "adminId",
+        "admin",
+        "admin@test.com",
+        "Admin"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
 
       requireAdmin(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(mockReq.user.role).toBe("admin");
+      expect(mockReq.user.email).toBe("admin@test.com");
+      expect(mockReq.user.firstName).toBe("Admin");
     });
 
     it("should reject request with student role", () => {
-      const token = generateToken("studentId", "student");
+      const token = generateToken(
+        "studentId",
+        "student",
+        "student@test.com",
+        "Student"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
 
       requireAdmin(mockReq, mockRes, mockNext);
@@ -100,7 +119,12 @@ describe("Auth Middleware", () => {
     });
 
     it("should reject request with faculty role", () => {
-      const token = generateToken("facultyId", "faculty");
+      const token = generateToken(
+        "facultyId",
+        "faculty",
+        "faculty@test.com",
+        "Faculty"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
 
       requireAdmin(mockReq, mockRes, mockNext);
@@ -119,7 +143,12 @@ describe("Auth Middleware", () => {
 
   describe("authorizeAdminOrOwner", () => {
     it("should allow admin to access any resource", () => {
-      const token = generateToken("adminId", "admin");
+      const token = generateToken(
+        "adminId",
+        "admin",
+        "admin@test.com",
+        "Admin"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = "differentUserId";
 
@@ -128,11 +157,18 @@ describe("Auth Middleware", () => {
 
       expect(mockNext).toHaveBeenCalled();
       expect(mockReq.user.role).toBe("admin");
+      expect(mockReq.user.email).toBe("admin@test.com");
+      expect(mockReq.user.firstName).toBe("Admin");
     });
 
     it("should allow user to access their own resource", () => {
       const userId = "userId123";
-      const token = generateToken(userId, "student");
+      const token = generateToken(
+        userId,
+        "student",
+        "student@test.com",
+        "Student"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = userId;
 
@@ -141,10 +177,17 @@ describe("Auth Middleware", () => {
 
       expect(mockNext).toHaveBeenCalled();
       expect(mockReq.user.id).toBe(userId);
+      expect(mockReq.user.email).toBe("student@test.com");
+      expect(mockReq.user.firstName).toBe("Student");
     });
 
     it("should reject non-admin user accessing another user resource", () => {
-      const token = generateToken("userId123", "student");
+      const token = generateToken(
+        "userId123",
+        "student",
+        "student@test.com",
+        "Student"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = "differentUserId";
 
@@ -161,7 +204,12 @@ describe("Auth Middleware", () => {
     });
 
     it("should reject faculty accessing another user resource", () => {
-      const token = generateToken("facultyId", "faculty");
+      const token = generateToken(
+        "facultyId",
+        "faculty",
+        "faculty@test.com",
+        "Faculty"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.id = "studentId";
 
@@ -174,7 +222,12 @@ describe("Auth Middleware", () => {
 
     it("should work with custom resource parameter name", () => {
       const userId = "userId123";
-      const token = generateToken(userId, "student");
+      const token = generateToken(
+        userId,
+        "student",
+        "student@test.com",
+        "Student"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
       mockReq.params.userId = userId;
 
@@ -196,7 +249,12 @@ describe("Auth Middleware", () => {
 
     it("should handle missing resource id parameter", () => {
       const userId = "userId123";
-      const token = generateToken(userId, "student");
+      const token = generateToken(
+        userId,
+        "student",
+        "student@test.com",
+        "Student"
+      );
       mockReq.headers.authorization = `Bearer ${token}`;
       // No params.id set
 

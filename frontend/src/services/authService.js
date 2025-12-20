@@ -64,6 +64,15 @@ export const authService = {
   isAuthenticated: () => {
     return !!localStorage.getItem("token");
   },
+
+  /**
+   * Check if current user is an admin
+   * @returns {boolean}
+   */
+  isAdmin: () => {
+    const user = authService.getCurrentUser();
+    return user && user.role === "admin";
+  },
 };
 
 export default authService;

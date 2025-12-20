@@ -45,7 +45,12 @@ describe("User Controller", () => {
       await userController.register(mockReq, mockRes);
 
       expect(userService.registerUser).toHaveBeenCalledWith(userData);
-      expect(generateToken).toHaveBeenCalledWith("userId123", "student");
+      expect(generateToken).toHaveBeenCalledWith(
+        "userId123",
+        "student",
+        "john@example.com",
+        "John"
+      );
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -145,7 +150,12 @@ describe("User Controller", () => {
         credentials.email,
         credentials.password
       );
-      expect(generateToken).toHaveBeenCalledWith("userId123", "student");
+      expect(generateToken).toHaveBeenCalledWith(
+        "userId123",
+        "student",
+        "john@example.com",
+        "John"
+      );
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,

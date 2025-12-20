@@ -109,6 +109,28 @@ describe("User Routes Integration Tests", () => {
       expect(res.body.data).not.toHaveProperty("password");
     });
 
+    it("should return token with email and firstName on registration", async () => {
+      const res = await request(app).post("/api/users/register").send({
+        firstName: "TestUser",
+        lastName: "Test",
+        email: "testtoken@test.com",
+        password: "password123",
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty("token");
+
+      // Verify token contains email and firstName
+      const { verifyToken } = require("../../src/config/jwt");
+      const decoded = verifyToken(res.body.token);
+
+      expect(decoded).toBeDefined();
+      expect(decoded.email).toBe("testtoken@test.com");
+      expect(decoded.firstName).toBe("TestUser");
+      expect(decoded.role).toBe("student");
+      expect(decoded.id).toBeDefined();
+    });
+
     it("should register user with all optional fields", async () => {
       const res = await request(app).post("/api/users/register").send({
         firstName: "Jane",
@@ -205,6 +227,26 @@ describe("User Routes Integration Tests", () => {
       expect(res.body).toHaveProperty("token");
       expect(res.body.data.email).toBe("admin@test.com");
       expect(res.body.data).not.toHaveProperty("password");
+    });
+
+    it("should return token with email and firstName fields", async () => {
+      const res = await request(app).post("/api/users/login").send({
+        email: "admin@test.com",
+        password: "password123",
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("token");
+
+      // Verify token can be decoded and contains email and firstName
+      const { verifyToken } = require("../../src/config/jwt");
+      const decoded = verifyToken(res.body.token);
+
+      expect(decoded).toBeDefined();
+      expect(decoded.email).toBe("admin@test.com");
+      expect(decoded.firstName).toBe("Admin");
+      expect(decoded.role).toBe("admin");
+      expect(decoded.id).toBeDefined();
     });
 
     it("should return 401 for incorrect password", async () => {

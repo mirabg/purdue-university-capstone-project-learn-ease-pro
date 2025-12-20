@@ -1,0 +1,7 @@
+# Cypress
+cypress/videos
+cypress/screenshots
+cypress/downloads
+
+# Cypress binary
+/cypress/binary_cache

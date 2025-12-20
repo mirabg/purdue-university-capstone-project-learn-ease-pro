@@ -44,7 +44,12 @@ exports.register = async (req, res) => {
     });
 
     // Generate JWT token
-    const token = generateToken(user._id.toString(), user.role);
+    const token = generateToken(
+      user._id.toString(),
+      user.role,
+      user.email,
+      user.firstName
+    );
 
     res.status(201).json({
       success: true,
@@ -79,7 +84,12 @@ exports.login = async (req, res) => {
     const user = await userService.authenticateUser(email, password);
 
     // Generate JWT token
-    const token = generateToken(user._id.toString(), user.role);
+    const token = generateToken(
+      user._id.toString(),
+      user.role,
+      user.email,
+      user.firstName
+    );
 
     res.status(200).json({
       success: true,

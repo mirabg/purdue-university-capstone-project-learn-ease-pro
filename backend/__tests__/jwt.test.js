@@ -5,8 +5,10 @@ describe("JWT Utilities", () => {
     it("should generate a valid JWT token", () => {
       const userId = "507f1f77bcf86cd799439011";
       const role = "student";
+      const email = "student@test.com";
+      const firstName = "John";
 
-      const token = generateToken(userId, role);
+      const token = generateToken(userId, role, email, firstName);
 
       expect(token).toBeDefined();
       expect(typeof token).toBe("string");
@@ -14,17 +16,34 @@ describe("JWT Utilities", () => {
     });
 
     it("should generate different tokens for different users", () => {
-      const token1 = generateToken("user1", "student");
-      const token2 = generateToken("user2", "faculty");
+      const token1 = generateToken(
+        "user1",
+        "student",
+        "user1@test.com",
+        "User"
+      );
+      const token2 = generateToken(
+        "user2",
+        "faculty",
+        "user2@test.com",
+        "User"
+      );
 
       expect(token1).not.toBe(token2);
     });
 
     it("should generate token with admin role", () => {
-      const token = generateToken("adminId", "admin");
+      const token = generateToken(
+        "adminId",
+        "admin",
+        "admin@test.com",
+        "Admin"
+      );
       const decoded = verifyToken(token);
 
       expect(decoded.role).toBe("admin");
+      expect(decoded.email).toBe("admin@test.com");
+      expect(decoded.firstName).toBe("Admin");
     });
   });
 
@@ -32,13 +51,17 @@ describe("JWT Utilities", () => {
     it("should verify and decode a valid token", () => {
       const userId = "507f1f77bcf86cd799439011";
       const role = "student";
-      const token = generateToken(userId, role);
+      const email = "student@test.com";
+      const firstName = "John";
+      const token = generateToken(userId, role, email, firstName);
 
       const decoded = verifyToken(token);
 
       expect(decoded).toBeDefined();
       expect(decoded.id).toBe(userId);
       expect(decoded.role).toBe(role);
+      expect(decoded.email).toBe(email);
+      expect(decoded.firstName).toBe(firstName);
       expect(decoded.iat).toBeDefined(); // Issued at
       expect(decoded.exp).toBeDefined(); // Expiration
     });
@@ -64,7 +87,12 @@ describe("JWT Utilities", () => {
     });
 
     it("should decode token with correct expiration", () => {
-      const token = generateToken("userId", "student");
+      const token = generateToken(
+        "userId",
+        "student",
+        "student@test.com",
+        "Student"
+      );
       const decoded = verifyToken(token);
 
       expect(decoded.exp).toBeGreaterThan(decoded.iat);
@@ -75,19 +103,36 @@ describe("JWT Utilities", () => {
       expect(expiresIn).toBeLessThan(87000);
     });
 
-    it("should preserve user id and role in token", () => {
+    it("should preserve user id, role, email, and firstName in token", () => {
       const testCases = [
-        { id: "user123", role: "student" },
-        { id: "admin456", role: "admin" },
-        { id: "faculty789", role: "faculty" },
+        {
+          id: "user123",
+          role: "student",
+          email: "student@test.com",
+          firstName: "Student",
+        },
+        {
+          id: "admin456",
+          role: "admin",
+          email: "admin@test.com",
+          firstName: "Admin",
+        },
+        {
+          id: "faculty789",
+          role: "faculty",
+          email: "faculty@test.com",
+          firstName: "Faculty",
+        },
       ];
 
-      testCases.forEach(({ id, role }) => {
-        const token = generateToken(id, role);
+      testCases.forEach(({ id, role, email, firstName }) => {
+        const token = generateToken(id, role, email, firstName);
         const decoded = verifyToken(token);
 
         expect(decoded.id).toBe(id);
         expect(decoded.role).toBe(role);
+        expect(decoded.email).toBe(email);
+        expect(decoded.firstName).toBe(firstName);
       });
     });
   });
@@ -96,9 +141,11 @@ describe("JWT Utilities", () => {
     it("should create and verify token successfully", () => {
       const userId = "testUser123";
       const role = "faculty";
+      const email = "faculty@test.com";
+      const firstName = "Faculty";
 
       // Generate
-      const token = generateToken(userId, role);
+      const token = generateToken(userId, role, email, firstName);
       expect(token).toBeDefined();
 
       // Verify
@@ -106,21 +153,32 @@ describe("JWT Utilities", () => {
       expect(decoded).toBeDefined();
       expect(decoded.id).toBe(userId);
       expect(decoded.role).toBe(role);
+      expect(decoded.email).toBe(email);
+      expect(decoded.firstName).toBe(firstName);
     });
 
-    it("should handle special characters in user id", () => {
+    it("should handle special characters in user id and email", () => {
       const userId = "507f1f77bcf86cd799439011";
-      const token = generateToken(userId, "student");
+      const email = "test+user@example.com";
+      const firstName = "Test User";
+      const token = generateToken(userId, "student", email, firstName);
       const decoded = verifyToken(token);
 
       expect(decoded.id).toBe(userId);
+      expect(decoded.email).toBe(email);
+      expect(decoded.firstName).toBe(firstName);
     });
 
     it("should return null for expired token", () => {
       // Create a token with a very short expiration
       const jwt = require("jsonwebtoken");
       const expiredToken = jwt.sign(
-        { id: "userId", role: "student" },
+        {
+          id: "userId",
+          role: "student",
+          email: "student@test.com",
+          firstName: "Student",
+        },
         process.env.JWT_SECRET,
         { expiresIn: "0s" } // Already expired
       );
@@ -133,7 +191,12 @@ describe("JWT Utilities", () => {
       // Token signed with different secret
       const jwt = require("jsonwebtoken");
       const invalidToken = jwt.sign(
-        { id: "userId", role: "student" },
+        {
+          id: "userId",
+          role: "student",
+          email: "student@test.com",
+          firstName: "Student",
+        },
         "wrong-secret-key",
         { expiresIn: "1d" }
       );

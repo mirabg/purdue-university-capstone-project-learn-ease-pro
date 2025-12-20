@@ -21,24 +21,41 @@ function Login() {
     if (error) setError("");
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setError("");
     setLoading(true);
 
-    try {
-      await authService.login(formData);
-      // Redirect based on user role or to dashboard
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password");
-    } finally {
-      setLoading(false);
-    }
+    authService
+      .login(formData)
+      .then((response) => {
+        // Redirect based on user role
+        if (authService.isAdmin()) {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
+      })
+      .catch((err) => {
+        // Display error message
+        const errorMessage =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Invalid email or password";
+
+        setError(errorMessage);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
+    return false;
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="h-full flex items-center justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-2 sm:mb-4">
@@ -53,30 +70,6 @@ function Login() {
         {/* Login Form Card */}
         <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-red-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Email Field */}
             <div>
               <label
@@ -117,34 +110,13 @@ function Login() {
                 className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 ease-in-out"
                 placeholder="Enter your password"
               />
+              {/* Error Message */}
+              {error && (
+                <p className="mt-6 text-sm text-red-600 text-center">{error}</p>
+              )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-primary-600 hover:text-primary-500 transition duration-150 ease-in-out"
-                >
-                  Forgot password?
-                </a>
-              </div>
-            </div>
+            {/* Forgot Password */}
 
             {/* Submit Button */}
             <div>
@@ -196,13 +168,6 @@ function Login() {
               </a>
             </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-gray-500">
-            © 2025 LearnEase Pro. All rights reserved.
-          </p>
         </div>
       </div>
     </div>
