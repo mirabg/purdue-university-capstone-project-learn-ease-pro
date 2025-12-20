@@ -1,10 +1,20 @@
 import { defineConfig } from "cypress";
+import { startDevServer } from "@cypress/vite-dev-server";
+import path from "path";
 
 export default defineConfig({
   e2e: {
     baseUrl: "http://localhost:3000",
     setupNodeEvents(on, config) {
-      // implement node event listeners here
+      // Vite dev server integration for Cypress
+      on("dev-server:start", (options) => {
+        return startDevServer({
+          options,
+          viteConfig: {
+            configFile: path.resolve(__dirname, "./vite.config.js"),
+          },
+        });
+      });
     },
     specPattern: "cypress/e2e/**/*.cy.{js,jsx,ts,tsx}",
     supportFile: "cypress/support/e2e.js",
