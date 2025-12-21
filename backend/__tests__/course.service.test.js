@@ -2,10 +2,12 @@ const courseService = require("../src/services/courseService");
 const courseRepository = require("../src/repositories/courseRepository");
 const courseDetailRepository = require("../src/repositories/courseDetailRepository");
 const courseFeedbackRepository = require("../src/repositories/courseFeedbackRepository");
+const courseEnrollmentRepository = require("../src/repositories/courseEnrollmentRepository");
 
 jest.mock("../src/repositories/courseRepository");
 jest.mock("../src/repositories/courseDetailRepository");
 jest.mock("../src/repositories/courseFeedbackRepository");
+jest.mock("../src/repositories/courseEnrollmentRepository");
 
 describe("CourseService", () => {
   beforeEach(() => {
@@ -454,6 +456,12 @@ describe("CourseService", () => {
       };
 
       const mockCourse = { _id: "course1", courseCode: "CS101" };
+      const mockEnrollment = {
+        _id: "enrollment1",
+        course: "course1",
+        student: "user1",
+        status: "accepted",
+      };
       const mockFeedback = {
         _id: "feedback1",
         user: "user1",
@@ -462,6 +470,9 @@ describe("CourseService", () => {
       };
 
       courseRepository.findById.mockResolvedValue(mockCourse);
+      courseEnrollmentRepository.findByCourseAndStudent.mockResolvedValue(
+        mockEnrollment
+      );
       courseFeedbackRepository.createOrUpdate.mockResolvedValue(mockFeedback);
 
       const result = await courseService.addOrUpdateFeedback(
@@ -471,6 +482,9 @@ describe("CourseService", () => {
       );
 
       expect(courseRepository.findById).toHaveBeenCalledWith("course1");
+      expect(
+        courseEnrollmentRepository.findByCourseAndStudent
+      ).toHaveBeenCalledWith("course1", "user1");
       expect(courseFeedbackRepository.createOrUpdate).toHaveBeenCalledWith({
         user: "user1",
         course: "course1",
@@ -486,6 +500,40 @@ describe("CourseService", () => {
       await expect(
         courseService.addOrUpdateFeedback("user1", "course1", { rating: 5 })
       ).rejects.toThrow("Course not found");
+    });
+
+    it("should throw error if user is not enrolled", async () => {
+      const mockCourse = { _id: "course1", courseCode: "CS101" };
+
+      courseRepository.findById.mockResolvedValue(mockCourse);
+      courseEnrollmentRepository.findByCourseAndStudent.mockResolvedValue(null);
+
+      await expect(
+        courseService.addOrUpdateFeedback("user1", "course1", { rating: 5 })
+      ).rejects.toThrow(
+        "You must be enrolled in this course to leave feedback"
+      );
+    });
+
+    it("should throw error if enrollment is not accepted", async () => {
+      const mockCourse = { _id: "course1", courseCode: "CS101" };
+      const mockEnrollment = {
+        _id: "enrollment1",
+        course: "course1",
+        student: "user1",
+        status: "pending",
+      };
+
+      courseRepository.findById.mockResolvedValue(mockCourse);
+      courseEnrollmentRepository.findByCourseAndStudent.mockResolvedValue(
+        mockEnrollment
+      );
+
+      await expect(
+        courseService.addOrUpdateFeedback("user1", "course1", { rating: 5 })
+      ).rejects.toThrow(
+        "You can only leave feedback for courses with accepted enrollment status"
+      );
     });
   });
 

@@ -1,6 +1,7 @@
 const courseRepository = require("../repositories/courseRepository");
 const courseDetailRepository = require("../repositories/courseDetailRepository");
 const courseFeedbackRepository = require("../repositories/courseFeedbackRepository");
+const courseEnrollmentRepository = require("../repositories/courseEnrollmentRepository");
 
 class CourseService {
   /**
@@ -78,8 +79,21 @@ class CourseService {
       );
       const total = await courseRepository.count(filter);
 
+      // Add rating information to each course
+      const coursesWithRatings = await Promise.all(
+        courses.map(async (course) => {
+          const courseObj = course.toObject();
+          const ratingStats = await courseFeedbackRepository.getAverageRating(
+            course._id
+          );
+          courseObj.averageRating = ratingStats.averageRating || 0;
+          courseObj.ratingCount = ratingStats.totalFeedback || 0;
+          return courseObj;
+        })
+      );
+
       return {
-        courses,
+        courses: coursesWithRatings,
         total,
         page,
         totalPages: Math.ceil(total / limit),
@@ -248,6 +262,25 @@ class CourseService {
       const course = await courseRepository.findById(courseId);
       if (!course) {
         throw new Error("Course not found");
+      }
+
+      // Verify user has accepted enrollment for this course
+      const enrollment =
+        await courseEnrollmentRepository.findByCourseAndStudent(
+          courseId,
+          userId
+        );
+
+      if (!enrollment) {
+        throw new Error(
+          "You must be enrolled in this course to leave feedback"
+        );
+      }
+
+      if (enrollment.status !== "accepted") {
+        throw new Error(
+          "You can only leave feedback for courses with accepted enrollment status"
+        );
       }
 
       const feedback = await courseFeedbackRepository.createOrUpdate({

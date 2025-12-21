@@ -1,6 +1,7 @@
 const courseEnrollmentRepository = require("../repositories/courseEnrollmentRepository");
 const courseRepository = require("../repositories/courseRepository");
 const userRepository = require("../repositories/userRepository");
+const courseFeedbackRepository = require("../repositories/courseFeedbackRepository");
 
 class CourseEnrollmentService {
   /**
@@ -96,8 +97,23 @@ class CourseEnrollmentService {
       );
       const total = await courseEnrollmentRepository.count(filter);
 
+      // Add rating information to each course
+      const enrollmentsWithRatings = await Promise.all(
+        enrollments.map(async (enrollment) => {
+          const enrollmentObj = enrollment.toObject();
+          if (enrollmentObj.course && enrollmentObj.course._id) {
+            const ratingStats = await courseFeedbackRepository.getAverageRating(
+              enrollmentObj.course._id
+            );
+            enrollmentObj.course.averageRating = ratingStats.averageRating || 0;
+            enrollmentObj.course.ratingCount = ratingStats.totalFeedback || 0;
+          }
+          return enrollmentObj;
+        })
+      );
+
       return {
-        enrollments,
+        enrollments: enrollmentsWithRatings,
         total,
         page,
         totalPages: Math.ceil(total / limit),
@@ -143,7 +159,23 @@ class CourseEnrollmentService {
         studentId,
         status
       );
-      return enrollments;
+
+      // Add rating information to each course
+      const enrollmentsWithRatings = await Promise.all(
+        enrollments.map(async (enrollment) => {
+          const enrollmentObj = enrollment.toObject();
+          if (enrollmentObj.course && enrollmentObj.course._id) {
+            const ratingStats = await courseFeedbackRepository.getAverageRating(
+              enrollmentObj.course._id
+            );
+            enrollmentObj.course.averageRating = ratingStats.averageRating || 0;
+            enrollmentObj.course.ratingCount = ratingStats.totalFeedback || 0;
+          }
+          return enrollmentObj;
+        })
+      );
+
+      return enrollmentsWithRatings;
     } catch (error) {
       throw error;
     }
