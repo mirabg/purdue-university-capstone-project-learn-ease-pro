@@ -158,15 +158,15 @@ function CourseManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         {/* Header with back button */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-8">
           <button
             onClick={() => navigate(getDashboardUrl())}
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
+            className="inline-flex items-center text-xs sm:text-sm text-gray-600 hover:text-gray-900 mb-3 sm:mb-4"
           >
             <svg
-              className="w-5 h-5 mr-2"
+              className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -180,17 +180,17 @@ function CourseManagement() {
             </svg>
             Back to Dashboard
           </button>
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
               Course Management
             </h1>
             {!isFaculty && (
               <button
                 onClick={handleCreateCourse}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 <svg
-                  className="mr-2 h-5 w-5"
+                  className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -202,14 +202,15 @@ function CourseManagement() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Create Course
+                <span className="hidden sm:inline">Create Course</span>
+                <span className="sm:hidden">Create</span>
               </button>
             )}
           </div>
         </div>
 
         {/* Search and filters */}
-        <div className="bg-white rounded-lg shadow mb-6 p-6">
+        <div className="bg-white rounded-lg shadow mb-4 sm:mb-6 p-3 sm:p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label htmlFor="search" className="sr-only">
@@ -218,7 +219,7 @@ function CourseManagement() {
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg
-                    className="h-5 w-5 text-gray-400"
+                    className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -234,7 +235,7 @@ function CourseManagement() {
                 <input
                   id="search"
                   name="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  className="block w-full pl-9 sm:pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm"
                   placeholder="Search by course code or name..."
                   type="search"
                   value={searchQuery}
@@ -243,7 +244,7 @@ function CourseManagement() {
               </div>
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+          <div className="mt-3 sm:mt-4 flex items-center justify-between text-xs sm:text-sm text-gray-600">
             <span>
               Showing {courses.length} of {totalCourses} courses
             </span>
@@ -314,45 +315,134 @@ function CourseManagement() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Mobile Card View */}
+              <div className="block md:hidden">
+                <div className="space-y-3">
+                  {courses.map((course) => (
+                    <div
+                      key={course._id}
+                      className="bg-white p-4 rounded-lg border border-gray-200"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-gray-900">
+                            {course.courseCode}
+                          </div>
+                          <div className="text-sm text-gray-700 mt-1">
+                            {course.name}
+                          </div>
+                        </div>
+                        <span
+                          className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                            course.isActive
+                          )}`}
+                        >
+                          {course.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mb-3 line-clamp-2">
+                        {course.description}
+                      </div>
+                      {(isFaculty || isAdmin) &&
+                        enrollmentStats[course._id] && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              {enrollmentStats[course._id].total} Total
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                              {enrollmentStats[course._id].pending} Pending
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              {enrollmentStats[course._id].accepted} Accepted
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                              {enrollmentStats[course._id].denied} Denied
+                            </span>
+                          </div>
+                        )}
+                      <div className="flex flex-wrap gap-2">
+                        {(isFaculty || isAdmin) && (
+                          <button
+                            onClick={() => handleManageEnrollments(course)}
+                            className="text-xs text-blue-600 hover:text-blue-900 font-medium"
+                          >
+                            Enrollments
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleManageMaterials(course)}
+                          className="text-xs text-green-600 hover:text-green-900 font-medium"
+                        >
+                          Materials
+                        </button>
+                        {!isFaculty && (
+                          <>
+                            <button
+                              onClick={() => handleEditCourse(course)}
+                              className="text-xs text-primary-600 hover:text-primary-900 font-medium"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCourse(course._id)}
+                              className={`text-xs font-medium ${
+                                deleteConfirmId === course._id
+                                  ? "text-red-700 font-bold"
+                                  : "text-red-600 hover:text-red-900"
+                              }`}
+                            >
+                              {deleteConfirmId === course._id
+                                ? "Confirm?"
+                                : "Delete"}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Course Code
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Name
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="hidden lg:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Description
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Status
                       </th>
                       {(isFaculty || isAdmin) && (
                         <th
                           scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          className="hidden xl:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                           Enrollments
                         </th>
                       )}
                       <th
                         scope="col"
-                        className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Actions
                       </th>
@@ -361,22 +451,22 @@ function CourseManagement() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {courses.map((course) => (
                       <tr key={course._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {course.courseCode}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 lg:px-6 py-4">
                           <div className="text-sm text-gray-900">
                             {course.name}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500">
+                        <td className="hidden lg:table-cell px-4 lg:px-6 py-4">
+                          <div className="text-sm text-gray-500 max-w-xs truncate">
                             {course.description}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                           <span
                             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
                               course.isActive
@@ -386,7 +476,7 @@ function CourseManagement() {
                           </span>
                         </td>
                         {(isFaculty || isAdmin) && (
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="hidden xl:table-cell px-4 lg:px-6 py-4 whitespace-nowrap">
                             {enrollmentStats[course._id] ? (
                               <div className="text-xs space-y-1">
                                 <div className="flex items-center">
@@ -417,43 +507,45 @@ function CourseManagement() {
                             )}
                           </td>
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {(isFaculty || isAdmin) && (
+                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
+                          <div className="flex flex-col xl:flex-row xl:justify-end gap-2 xl:gap-0">
+                            {(isFaculty || isAdmin) && (
+                              <button
+                                onClick={() => handleManageEnrollments(course)}
+                                className="text-blue-600 hover:text-blue-900 xl:mr-4 text-left xl:text-right"
+                              >
+                                Enrollments
+                              </button>
+                            )}
                             <button
-                              onClick={() => handleManageEnrollments(course)}
-                              className="text-blue-600 hover:text-blue-900 mr-4"
+                              onClick={() => handleManageMaterials(course)}
+                              className="text-green-600 hover:text-green-900 xl:mr-4 text-left xl:text-right"
                             >
-                              Enrollments
+                              Materials
                             </button>
-                          )}
-                          <button
-                            onClick={() => handleManageMaterials(course)}
-                            className="text-green-600 hover:text-green-900 mr-4"
-                          >
-                            Materials
-                          </button>
-                          {!isFaculty && (
-                            <>
-                              <button
-                                onClick={() => handleEditCourse(course)}
-                                className="text-primary-600 hover:text-primary-900 mr-4"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCourse(course._id)}
-                                className={`${
-                                  deleteConfirmId === course._id
-                                    ? "text-red-700 font-bold"
-                                    : "text-red-600 hover:text-red-900"
-                                }`}
-                              >
-                                {deleteConfirmId === course._id
-                                  ? "Confirm Delete?"
-                                  : "Delete"}
-                              </button>
-                            </>
-                          )}
+                            {!isFaculty && (
+                              <>
+                                <button
+                                  onClick={() => handleEditCourse(course)}
+                                  className="text-primary-600 hover:text-primary-900 xl:mr-4 text-left xl:text-right"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteCourse(course._id)}
+                                  className={`text-left xl:text-right ${
+                                    deleteConfirmId === course._id
+                                      ? "text-red-700 font-bold"
+                                      : "text-red-600 hover:text-red-900"
+                                  }`}
+                                >
+                                  {deleteConfirmId === course._id
+                                    ? "Confirm Delete?"
+                                    : "Delete"}
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
