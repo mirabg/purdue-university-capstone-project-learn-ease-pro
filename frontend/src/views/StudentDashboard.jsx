@@ -7,6 +7,7 @@ import api from "@services/api";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
 import AddEditRatingModal from "@components/AddEditRatingModal";
+import CourseMaterialsModal from "@components/CourseMaterialsModal";
 
 function StudentDashboard() {
   const navigate = useNavigate();
@@ -19,6 +20,9 @@ function StudentDashboard() {
   const [selectedCourseForRating, setSelectedCourseForRating] = useState(null);
   const [existingFeedback, setExistingFeedback] = useState(null);
   const [userFeedbackMap, setUserFeedbackMap] = useState({});
+  const [isMaterialsModalOpen, setIsMaterialsModalOpen] = useState(false);
+  const [selectedCourseForMaterials, setSelectedCourseForMaterials] =
+    useState(null);
 
   // Get status badge styling based on enrollment status
   const getStatusBadgeClass = (status) => {
@@ -117,6 +121,11 @@ function StudentDashboard() {
   const handleRatingSuccess = () => {
     // Reload the courses to reflect the updated rating
     loadData();
+  };
+
+  const handleViewMaterials = (course) => {
+    setSelectedCourseForMaterials(course);
+    setIsMaterialsModalOpen(true);
   };
 
   if (!user) {
@@ -279,29 +288,54 @@ function StudentDashboard() {
                           {capitalizeStatus(enrollment.status)}
                         </span>
                       </div>
-                      {/* Add/Edit Rating Button for Accepted Courses */}
+                      {/* Buttons for Accepted Courses */}
                       {enrollment.status?.toLowerCase() === "accepted" && (
-                        <button
-                          onClick={() => handleAddEditRating(enrollment.course)}
-                          className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
-                        >
-                          <svg
-                            className="h-4 w-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        <div className="space-y-2">
+                          <button
+                            onClick={() =>
+                              handleViewMaterials(enrollment.course)
+                            }
+                            className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                            />
-                          </svg>
-                          {userFeedbackMap[enrollment.course._id]
-                            ? "Edit Your Rating"
-                            : "Rate This Course"}
-                        </button>
+                            <svg
+                              className="h-4 w-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                              />
+                            </svg>
+                            Course Materials
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleAddEditRating(enrollment.course)
+                            }
+                            className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
+                          >
+                            <svg
+                              className="h-4 w-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                              />
+                            </svg>
+                            {userFeedbackMap[enrollment.course._id]
+                              ? "Edit Your Rating"
+                              : "Rate This Course"}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -375,6 +409,17 @@ function StudentDashboard() {
         course={selectedCourseForRating}
         existingFeedback={existingFeedback}
         onSuccess={handleRatingSuccess}
+      />
+
+      {/* Course Materials Modal */}
+      <CourseMaterialsModal
+        isOpen={isMaterialsModalOpen}
+        onClose={() => {
+          setIsMaterialsModalOpen(false);
+          setSelectedCourseForMaterials(null);
+        }}
+        course={selectedCourseForMaterials}
+        readOnly={true}
       />
     </div>
   );

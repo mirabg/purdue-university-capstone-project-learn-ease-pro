@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { courseService } from "@services/courseService";
 import api from "@services/api";
 
-function CourseMaterialsModal({ isOpen, onClose, course }) {
+function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -214,128 +214,129 @@ function CourseMaterialsModal({ isOpen, onClose, course }) {
           )}
 
           {/* Upload Form */}
-          {showUploadForm ? (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">
-                Upload New Material
-              </h4>
-              <form onSubmit={handleUpload}>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      File <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="file"
-                      onChange={handleFileChange}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.mp4,.mov,.avi,.jpg,.jpeg,.png,.gif,.zip,.rar"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Max file size: 100MB. Supported formats: PDF, Word,
-                      PowerPoint, Excel, Videos, Images, ZIP
-                    </p>
-                  </div>
+          {!readOnly &&
+            (showUploadForm ? (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  Upload New Material
+                </h4>
+                <form onSubmit={handleUpload}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        File <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.mp4,.mov,.avi,.jpg,.jpeg,.png,.gif,.zip,.rar"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Max file size: 100MB. Supported formats: PDF, Word,
+                        PowerPoint, Excel, Videos, Images, ZIP
+                      </p>
+                    </div>
 
-                  <div>
-                    <label
-                      htmlFor="title"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Title <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="title"
-                      name="title"
-                      value={uploadForm.title}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="Enter material title"
-                      required
-                    />
-                  </div>
+                    <div>
+                      <label
+                        htmlFor="title"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Title <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={uploadForm.title}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="Enter material title"
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <label
-                      htmlFor="type"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Type
-                    </label>
-                    <select
-                      id="type"
-                      name="type"
-                      value={uploadForm.type}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="document">Document</option>
-                      <option value="video">Video</option>
-                      <option value="presentation">Presentation</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
+                    <div>
+                      <label
+                        htmlFor="type"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Type
+                      </label>
+                      <select
+                        id="type"
+                        name="type"
+                        value={uploadForm.type}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="document">Document</option>
+                        <option value="video">Video</option>
+                        <option value="presentation">Presentation</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
 
-                  <div>
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      value={uploadForm.description}
-                      onChange={handleInputChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="Optional description"
-                    />
-                  </div>
+                    <div>
+                      <label
+                        htmlFor="description"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Description
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={uploadForm.description}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="Optional description"
+                      />
+                    </div>
 
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowUploadForm(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      disabled={uploading}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={uploading || !uploadForm.file}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {uploading ? "Uploading..." : "Upload"}
-                    </button>
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowUploadForm(false)}
+                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        disabled={uploading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={uploading || !uploadForm.file}
+                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {uploading ? "Uploading..." : "Upload"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </form>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowUploadForm(true)}
-              className="mb-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
-            >
-              <svg
-                className="mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                </form>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowUploadForm(true)}
+                className="mb-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              Upload Material
-            </button>
-          )}
+                <svg
+                  className="mr-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                Upload Material
+              </button>
+            ))}
 
           {/* Materials List */}
           <div>
@@ -388,7 +389,8 @@ function CourseMaterialsModal({ isOpen, onClose, course }) {
                         )}
                         <div className="flex items-center mt-1 space-x-2">
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                            {material.type}
+                            {material.type.charAt(0).toUpperCase() +
+                              material.type.slice(1)}
                           </span>
                           {material.url.startsWith("/uploads/") && (
                             <a
@@ -403,24 +405,26 @@ function CourseMaterialsModal({ isOpen, onClose, course }) {
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDelete(material._id)}
-                      className="ml-4 text-red-600 hover:text-red-900"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    {!readOnly && (
+                      <button
+                        onClick={() => handleDelete(material._id)}
+                        className="ml-4 text-red-600 hover:text-red-900"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
