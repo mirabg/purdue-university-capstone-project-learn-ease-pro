@@ -70,8 +70,11 @@ function StudentDashboard() {
     try {
       setLoading(true);
 
-      // Fetch user's enrollments
-      const enrollmentsResponse = await enrollmentService.getAllEnrollments();
+      // Fetch user's enrollments (all of them - set high limit)
+      const enrollmentsResponse = await enrollmentService.getAllEnrollments(
+        1,
+        1000
+      );
       const enrollments = enrollmentsResponse.data || [];
 
       setEnrolledCourses(enrollments);
