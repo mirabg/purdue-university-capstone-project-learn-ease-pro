@@ -6,6 +6,7 @@ import Register from "@views/Register";
 import AdminDashboard from "@views/AdminDashboard";
 import FacultyDashboard from "@views/FacultyDashboard";
 import StudentDashboard from "@views/StudentDashboard";
+import ExploreCourses from "@views/ExploreCourses";
 import UserManagement from "@views/UserManagement";
 import CourseManagement from "@views/CourseManagement";
 import Unauthorized from "@views/Unauthorized";
@@ -48,6 +49,14 @@ function App() {
             element={
               <PrivateRoute>
                 <StudentDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/student/explore-courses"
+            element={
+              <PrivateRoute>
+                <ExploreCourses />
               </PrivateRoute>
             }
           />

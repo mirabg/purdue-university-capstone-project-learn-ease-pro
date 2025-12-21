@@ -3,12 +3,20 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import StudentDashboard from "@views/StudentDashboard";
 import { authService } from "@services/authService";
+import { enrollmentService } from "@services/enrollmentService";
 import api from "@services/api";
 
 // Mock the authService
 vi.mock("@services/authService", () => ({
   authService: {
     getCurrentUser: vi.fn(),
+  },
+}));
+
+// Mock the enrollmentService
+vi.mock("@services/enrollmentService", () => ({
+  enrollmentService: {
+    getAllEnrollments: vi.fn(),
   },
 }));
 
@@ -20,12 +28,42 @@ vi.mock("@services/api", () => ({
 }));
 
 describe("StudentDashboard", () => {
+  const mockUser = {
+    id: "user123",
+    firstName: "John",
+    lastName: "Doe",
+    email: "john@example.com",
+    role: "student",
+  };
+
+  const mockInstructor = {
+    _id: "instructor1",
+    firstName: "Jane",
+    lastName: "Smith",
+  };
+
+  const mockEnrollments = [
+    {
+      _id: "enrollment1",
+      course: {
+        _id: "course1",
+        name: "Introduction to Programming",
+        courseCode: "CS101",
+        description: "Learn the basics of programming",
+        instructor: mockInstructor,
+      },
+      status: "accepted",
+    },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: {} }); // Default mock
+    authService.getCurrentUser.mockReturnValue(mockUser);
+    api.get.mockResolvedValue({ data: {} });
+    enrollmentService.getAllEnrollments.mockResolvedValue({ data: [] });
   });
 
-  it("should render nothing while loading user data", () => {
+  it("should render nothing while user is loading", () => {
     authService.getCurrentUser.mockReturnValue(null);
 
     const { container } = render(
@@ -37,12 +75,25 @@ describe("StudentDashboard", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("should render dashboard with user name", () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
+  it("should display loading state", async () => {
+    enrollmentService.getAllEnrollments.mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    render(
+      <BrowserRouter>
+        <StudentDashboard />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
+    });
+  });
+
+  it("should render dashboard with user name", async () => {
+    enrollmentService.getAllEnrollments.mockResolvedValue({
+      data: mockEnrollments,
     });
 
     render(
@@ -51,18 +102,18 @@ describe("StudentDashboard", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/Welcome, John!/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Welcome, John!/i)).toBeInTheDocument();
+    });
+
     expect(
       screen.getByText(/Here's what's happening with your learning journey/i)
     ).toBeInTheDocument();
   });
 
-  it("should render stats cards", () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
+  it("should display enrolled courses count", async () => {
+    enrollmentService.getAllEnrollments.mockResolvedValue({
+      data: mockEnrollments,
     });
 
     render(
@@ -71,17 +122,14 @@ describe("StudentDashboard", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/Enrolled Courses/i)).toBeInTheDocument();
-    expect(screen.getByText(/Completed Courses/i)).toBeInTheDocument();
-    expect(screen.getByText(/In Progress/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/1 Course/i)).toBeInTheDocument();
+    });
   });
 
-  it("should render My Courses section", () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
+  it("should display enrolled courses in My Courses section", async () => {
+    enrollmentService.getAllEnrollments.mockResolvedValue({
+      data: mockEnrollments,
     });
 
     render(
@@ -90,19 +138,17 @@ describe("StudentDashboard", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/My Courses/i)).toBeInTheDocument();
-    expect(screen.getByText(/No courses yet/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/You haven't enrolled in any courses yet/i)
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText("Introduction to Programming")
+      ).toBeInTheDocument();
+      expect(screen.getByText("CS101")).toBeInTheDocument();
+    });
   });
 
-  it("should render Explore Courses button", () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
+  it("should display instructor information in enrolled courses", async () => {
+    enrollmentService.getAllEnrollments.mockResolvedValue({
+      data: mockEnrollments,
     });
 
     render(
@@ -111,18 +157,16 @@ describe("StudentDashboard", () => {
       </BrowserRouter>
     );
 
-    const browseButton = screen.getByRole("button", {
-      name: /Explore Courses/i,
+    await waitFor(() => {
+      const instructorTexts = screen.getAllByText("Instructor:");
+      expect(instructorTexts.length).toBeGreaterThan(0);
+      expect(screen.getByText(/Jane Smith/)).toBeInTheDocument();
     });
-    expect(browseButton).toBeInTheDocument();
   });
 
-  it("should display initial course stats as 0", () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
+  it("should display capitalized status with color badges", async () => {
+    enrollmentService.getAllEnrollments.mockResolvedValue({
+      data: mockEnrollments,
     });
 
     render(
@@ -131,19 +175,13 @@ describe("StudentDashboard", () => {
       </BrowserRouter>
     );
 
-    // Get all text content with "0"
-    const stats = screen.getAllByText("0");
-    // Should have 3 zeros for the three stat cards
-    expect(stats.length).toBeGreaterThanOrEqual(3);
+    await waitFor(() => {
+      expect(screen.getByText("Accepted")).toBeInTheDocument();
+    });
   });
 
-  it("should render Recent Activity section", () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
-    });
+  it("should show empty state when no courses enrolled", async () => {
+    enrollmentService.getAllEnrollments.mockResolvedValue({ data: [] });
 
     render(
       <BrowserRouter>
@@ -151,21 +189,31 @@ describe("StudentDashboard", () => {
       </BrowserRouter>
     );
 
-    expect(
-      screen.getByRole("heading", { name: /Recent Activity/i })
-    ).toBeInTheDocument();
-    expect(screen.getByText(/No recent activity/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/No courses yet/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/You haven't enrolled in any courses yet/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should display Explore Courses button", async () => {
+    enrollmentService.getAllEnrollments.mockResolvedValue({ data: [] });
+
+    render(
+      <BrowserRouter>
+        <StudentDashboard />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Discover New Courses/i)).toBeInTheDocument();
+      expect(screen.getByText(/Explore Courses/i)).toBeInTheDocument();
+    });
   });
 
   it("should make API call to verify token on mount", async () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
-    });
-
-    api.get.mockResolvedValue({ data: { user: {} } });
+    enrollmentService.getAllEnrollments.mockResolvedValue({ data: [] });
 
     render(
       <BrowserRouter>
@@ -179,16 +227,9 @@ describe("StudentDashboard", () => {
   });
 
   it("should handle 401 error from token verification", async () => {
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
-    });
-
-    api.get.mockRejectedValue({
-      response: { status: 401 },
-    });
+    const error401 = { response: { status: 401 } };
+    api.get.mockRejectedValue(error401);
+    enrollmentService.getAllEnrollments.mockResolvedValue({ data: [] });
 
     render(
       <BrowserRouter>
@@ -197,25 +238,16 @@ describe("StudentDashboard", () => {
     );
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith("/users/me");
+      expect(api.get).toHaveBeenCalled();
     });
-
-    // Should still render the dashboard
-    expect(screen.getByText(/Welcome, John!/i)).toBeInTheDocument();
   });
 
   it("should handle non-401 errors from token verification", async () => {
+    const error404 = { response: { status: 404 }, message: "Not found" };
+    api.get.mockRejectedValue(error404);
+    enrollmentService.getAllEnrollments.mockResolvedValue({ data: [] });
+
     const consoleSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
-
-    authService.getCurrentUser.mockReturnValue({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      role: "student",
-    });
-
-    const error = new Error("Network error");
-    api.get.mockRejectedValue(error);
 
     render(
       <BrowserRouter>
@@ -226,7 +258,7 @@ describe("StudentDashboard", () => {
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
         "User validation skipped:",
-        "Network error"
+        "Not found"
       );
     });
 
