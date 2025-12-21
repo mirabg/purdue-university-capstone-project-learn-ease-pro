@@ -102,7 +102,13 @@ function CourseRating({
       </div>
 
       {showCount && (
-        <span className={`${sizeConfig.text} text-gray-600 font-medium ml-1`}>
+        <span
+          className={`${sizeConfig.text} font-medium ml-1 ${
+            isInteractive
+              ? "text-primary-600 hover:text-primary-700 hover:underline"
+              : "text-gray-600"
+          }`}
+        >
           {rating} {ratingCount > 0 && `(${ratingCount})`}
         </span>
       )}
