@@ -12,6 +12,26 @@ import Unauthorized from "@views/Unauthorized";
 import AdminRoute from "@components/AdminRoute";
 import FacultyRoute from "@components/FacultyRoute";
 import PrivateRoute from "@components/PrivateRoute";
+import { authService } from "@services/authService";
+
+// Component to handle root redirect based on auth status
+function RootRedirect() {
+  const isAuthenticated = authService.isAuthenticated();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const user = authService.getCurrentUser();
+
+  if (user?.role === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  } else if (user?.role === "faculty") {
+    return <Navigate to="/faculty/dashboard" replace />;
+  } else {
+    return <Navigate to="/student/dashboard" replace />;
+  }
+}
 
 function App() {
   return (
@@ -19,7 +39,7 @@ function App() {
       <Header />
       <main className="flex-1 bg-gradient-to-br from-primary-50 via-white to-primary-100">
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/register" element={<Register />} />

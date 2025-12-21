@@ -106,6 +106,7 @@ describe("Course Routes Integration Tests", () => {
       courseCode: "CS101",
       name: "Introduction to Computer Science",
       description: "A comprehensive introduction to computer science",
+      instructor: facultyUser._id,
     });
   });
 
@@ -115,6 +116,7 @@ describe("Course Routes Integration Tests", () => {
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn about data structures",
+        instructor: facultyUser._id.toString(),
       };
 
       const res = await request(app)
@@ -133,6 +135,7 @@ describe("Course Routes Integration Tests", () => {
         courseCode: "CS103",
         name: "Algorithms",
         description: "Learn about algorithms",
+        instructor: facultyUser._id.toString(),
       };
 
       const res = await request(app)
@@ -144,11 +147,55 @@ describe("Course Routes Integration Tests", () => {
       expect(res.body.success).toBe(true);
     });
 
-    it("should not allow student to create course", async () => {
+    it("should allow admin to create course with instructor", async () => {
       const courseData = {
         courseCode: "CS104",
+        name: "Database Systems",
+        description: "Learn about databases",
+        instructor: facultyUser._id.toString(),
+      };
+
+      const res = await request(app)
+        .post("/api/courses")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send(courseData);
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.instructor).toBeDefined();
+      // Check if instructor is populated or just an ID
+      if (typeof res.body.data.instructor === "object") {
+        expect(res.body.data.instructor._id).toBe(facultyUser._id.toString());
+        expect(res.body.data.instructor.firstName).toBe("Faculty");
+        expect(res.body.data.instructor.lastName).toBe("User");
+      } else {
+        expect(res.body.data.instructor).toBe(facultyUser._id.toString());
+      }
+    });
+
+    it("should return 400 when instructor is not a faculty member", async () => {
+      const courseData = {
+        courseCode: "CS105",
+        name: "Networks",
+        description: "Learn about networks",
+        instructor: studentUser._id.toString(),
+      };
+
+      const res = await request(app)
+        .post("/api/courses")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send(courseData);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it("should not allow student to create course", async () => {
+      const courseData = {
+        courseCode: "CS106",
         name: "Operating Systems",
         description: "Learn about OS",
+        instructor: facultyUser._id.toString(),
       };
 
       const res = await request(app)
@@ -199,12 +246,14 @@ describe("Course Routes Integration Tests", () => {
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn data structures",
+        instructor: facultyUser._id,
       });
 
       await Course.create({
         courseCode: "CS103",
         name: "Algorithms",
         description: "Learn algorithms",
+        instructor: facultyUser._id,
       });
     });
 

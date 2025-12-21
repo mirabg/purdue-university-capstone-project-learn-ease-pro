@@ -1,13 +1,27 @@
 const courseRepository = require("../src/repositories/courseRepository");
 const Course = require("../src/models/Course");
+const User = require("../src/models/User");
 
 describe("CourseRepository", () => {
+  let facultyUser;
+
+  beforeEach(async () => {
+    facultyUser = await User.create({
+      firstName: "John",
+      lastName: "Doe",
+      email: "faculty@test.com",
+      password: "password123",
+      role: "faculty",
+    });
+  });
+
   describe("create", () => {
     it("should create a new course", async () => {
       const courseData = {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       };
 
       const course = await courseRepository.create(courseData);
@@ -23,6 +37,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       };
 
       await courseRepository.create(courseData);
@@ -47,6 +62,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const found = await courseRepository.findById(created._id);
@@ -70,6 +86,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const found = await courseRepository.findByCourseCode("CS101");
@@ -83,6 +100,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const found = await courseRepository.findByCourseCode("cs101");
@@ -104,12 +122,14 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       await Course.create({
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn data structures",
+        instructor: facultyUser._id,
       });
 
       await Course.create({
@@ -117,6 +137,7 @@ describe("CourseRepository", () => {
         name: "Algorithms",
         description: "Learn algorithms",
         isActive: false,
+        instructor: facultyUser._id,
       });
     });
 
@@ -132,11 +153,11 @@ describe("CourseRepository", () => {
       expect(courses).toHaveLength(2);
     });
 
-    it("should return courses sorted by createdAt descending", async () => {
+    it("should return courses sorted by courseCode ascending", async () => {
       const courses = await courseRepository.findAll();
 
-      // CS103 was created last, so should be first
-      expect(courses[0].courseCode).toBe("CS103");
+      // CS101 was created first, so should be first when sorted by courseCode
+      expect(courses[0].courseCode).toBe("CS101");
     });
   });
 
@@ -147,6 +168,7 @@ describe("CourseRepository", () => {
           courseCode: `CS${100 + i}`,
           name: `Course ${i}`,
           description: `Description ${i}`,
+          instructor: facultyUser._id,
         });
       }
     });
@@ -188,12 +210,14 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       await Course.create({
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn data structures",
+        instructor: facultyUser._id,
       });
 
       await Course.create({
@@ -201,6 +225,7 @@ describe("CourseRepository", () => {
         name: "Algorithms",
         description: "Learn algorithms",
         isActive: false,
+        instructor: facultyUser._id,
       });
     });
 
@@ -223,6 +248,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const updated = await courseRepository.update(course._id, {
@@ -247,6 +273,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       await expect(
@@ -263,6 +290,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const updated = await courseRepository.updateWithVersion(
@@ -283,6 +311,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const updated = await courseRepository.updateWithVersion(
@@ -303,6 +332,7 @@ describe("CourseRepository", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const deleted = await courseRepository.delete(course._id);
@@ -340,9 +370,9 @@ describe("CourseRepository", () => {
     });
 
     it("should handle errors in findById", async () => {
-      jest
-        .spyOn(Course, "findById")
-        .mockRejectedValueOnce(new Error("Database error"));
+      jest.spyOn(Course, "findById").mockReturnValueOnce({
+        populate: jest.fn().mockRejectedValueOnce(new Error("Database error")),
+      });
 
       await expect(courseRepository.findById("123")).rejects.toThrow(
         "Database error"
@@ -365,7 +395,9 @@ describe("CourseRepository", () => {
 
     it("should handle errors in findAll", async () => {
       jest.spyOn(Course, "find").mockReturnValueOnce({
-        sort: jest.fn().mockRejectedValueOnce(new Error("Database error")),
+        populate: jest.fn().mockReturnValueOnce({
+          sort: jest.fn().mockRejectedValueOnce(new Error("Database error")),
+        }),
       });
 
       await expect(courseRepository.findAll()).rejects.toThrow(
@@ -377,9 +409,13 @@ describe("CourseRepository", () => {
 
     it("should handle errors in findWithPagination", async () => {
       jest.spyOn(Course, "find").mockReturnValueOnce({
-        skip: jest.fn().mockReturnValueOnce({
-          limit: jest.fn().mockReturnValueOnce({
-            sort: jest.fn().mockRejectedValueOnce(new Error("Database error")),
+        populate: jest.fn().mockReturnValueOnce({
+          skip: jest.fn().mockReturnValueOnce({
+            limit: jest.fn().mockReturnValueOnce({
+              sort: jest
+                .fn()
+                .mockRejectedValueOnce(new Error("Database error")),
+            }),
           }),
         }),
       });
@@ -402,9 +438,9 @@ describe("CourseRepository", () => {
     });
 
     it("should handle errors in update", async () => {
-      jest
-        .spyOn(Course, "findByIdAndUpdate")
-        .mockRejectedValueOnce(new Error("Database error"));
+      jest.spyOn(Course, "findByIdAndUpdate").mockReturnValueOnce({
+        populate: jest.fn().mockRejectedValueOnce(new Error("Database error")),
+      });
 
       await expect(
         courseRepository.update("123", { name: "Test" })

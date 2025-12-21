@@ -11,6 +11,9 @@ const {
 router.post("/register", userController.register);
 router.post("/login", userController.login);
 
+// Public endpoint for getting faculty users (needed for course creation)
+router.get("/faculty", userController.getFacultyUsers);
+
 // CRUD operations
 router.post("/", requireAdmin, userController.createUser); // Admin creates new user
 router.get("/", requireAdmin, userController.getAllUsers); // Only admin can see all users

@@ -7,12 +7,23 @@ describe("CourseFeedbackRepository", () => {
   let testCourse;
   let testUser1;
   let testUser2;
+  let facultyUser;
 
   beforeEach(async () => {
+    facultyUser = await User.create({
+      firstName: "Faculty",
+      lastName: "Member",
+      email: "faculty@test.com",
+      password: "Password123!",
+      phone: "555-555-5557",
+      role: "faculty",
+    });
+
     testCourse = await Course.create({
       courseCode: "CS101",
       name: "Introduction to Computer Science",
       description: "A comprehensive introduction",
+      instructor: facultyUser._id,
     });
 
     testUser1 = await User.create({
@@ -194,6 +205,7 @@ describe("CourseFeedbackRepository", () => {
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn data structures",
+        instructor: facultyUser._id,
       });
 
       const result = await courseFeedbackRepository.getAverageRating(
@@ -280,6 +292,7 @@ describe("CourseFeedbackRepository", () => {
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn data structures",
+        instructor: facultyUser._id,
       });
 
       const count = await courseFeedbackRepository.count({

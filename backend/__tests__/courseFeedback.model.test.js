@@ -6,12 +6,23 @@ const User = require("../src/models/User");
 describe("CourseFeedback Model", () => {
   let testCourse;
   let testUser;
+  let facultyUser;
 
   beforeEach(async () => {
+    facultyUser = await User.create({
+      firstName: "Faculty",
+      lastName: "Member",
+      email: "faculty@test.com",
+      password: "Password123!",
+      phone: "555-555-5556",
+      role: "faculty",
+    });
+
     testCourse = await Course.create({
       courseCode: "CS101",
       name: "Introduction to Computer Science",
       description: "A comprehensive introduction",
+      instructor: facultyUser._id,
     });
 
     testUser = await User.create({
@@ -237,6 +248,7 @@ describe("CourseFeedback Model", () => {
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn data structures",
+        instructor: facultyUser._id,
       });
 
       const feedback1 = await CourseFeedback.create({
@@ -371,6 +383,7 @@ describe("CourseFeedback Model", () => {
         courseCode: "CS102",
         name: "Data Structures",
         description: "Learn data structures",
+        instructor: facultyUser._id,
       });
 
       await CourseFeedback.create({

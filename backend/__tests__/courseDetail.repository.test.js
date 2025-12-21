@@ -1,15 +1,26 @@
 const courseDetailRepository = require("../src/repositories/courseDetailRepository");
 const CourseDetail = require("../src/models/CourseDetail");
 const Course = require("../src/models/Course");
+const User = require("../src/models/User");
 
 describe("CourseDetailRepository", () => {
   let testCourse;
+  let facultyUser;
 
   beforeEach(async () => {
+    facultyUser = await User.create({
+      firstName: "John",
+      lastName: "Doe",
+      email: "faculty@test.com",
+      password: "password123",
+      role: "faculty",
+    });
+
     testCourse = await Course.create({
       courseCode: "CS101",
       name: "Introduction to Computer Science",
       description: "A comprehensive introduction",
+      instructor: facultyUser._id,
     });
   });
 

@@ -7,7 +7,7 @@ const courseService = require("../services/courseService");
  */
 exports.createCourse = async (req, res) => {
   try {
-    const { courseCode, name, description, isActive } = req.body;
+    const { courseCode, name, description, isActive, instructor } = req.body;
 
     // Validate input
     if (!courseCode || !name || !description) {
@@ -22,6 +22,7 @@ exports.createCourse = async (req, res) => {
       courseCode,
       name,
       description,
+      instructor: instructor || undefined,
       isActive: isActive !== undefined ? isActive : true,
     });
 

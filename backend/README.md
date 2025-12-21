@@ -76,19 +76,45 @@ A robust Express.js REST API with MongoDB, featuring JWT authentication, role-ba
    mongod --config /usr/local/etc/mongod.conf
    ```
 
-5. **Seed the database with initial admin user**
+5. **Seed the database with initial data**
+
+   **Option A: Quick Start (Admin Only)**
 
    ```bash
    npm run seed:admin
    ```
 
-   This creates an admin user with:
+   **Option B: Full Database Setup (Recommended)**
+
+   ```bash
+   # Step 1: Seed admin and sample users (includes faculty, students)
+   node src/scripts/seedUsers.js
+
+   # Step 2: Seed courses (requires users with faculty role)
+   npm run seed:courses
+
+   # Step 3: (Optional) Seed course materials
+   npm run seed:materials
+   ```
+
+   **Default Admin Credentials:**
 
    - **Email:** admin@nowhere.com
    - **Password:** changeme
    - **Role:** admin
 
-   ⚠️ **Important:** Change the password after first login!
+   **Sample Faculty Users:**
+
+   - emily.johnson@example.com / password123
+   - sarah.brown@example.com / password123
+   - ashley.rodriguez@example.com / password123
+
+   **Sample Student Users:**
+
+   - michael.wilson@example.com / password123
+   - jessica.martinez@example.com / password123
+
+   ⚠️ **Important:** Change default passwords after first login!
 
 6. **Run the server**
 
@@ -259,7 +285,12 @@ backend/
 │   │   ├── index.js
 │   │   └── userRoutes.js
 │   ├── scripts/         # Utility scripts
-│   │   └── seedAdmin.js # Seed initial admin user
+│   │   ├── seedAdmin.js # Seed initial admin user
+│   │   ├── seedUsers.js # Seed sample users (faculty, students)
+│   │   ├── seedCourses.js # Seed sample courses
+│   │   ├── seedCourseMaterials.js # Seed course materials
+│   │   ├── migrateCourseInstructors.js # Assign instructors to existing courses
+│   │   └── verifyCourseInstructors.js # Verify instructor assignments
 │   └── services/        # Business logic
 │       └── userService.js
 ├── __tests__/           # Test files
@@ -321,7 +352,11 @@ npm test -- --coverage
 
 ## Database Management
 
-### Seed Admin User
+### Seeding the Database
+
+The application provides several seeding scripts to populate your database with sample data.
+
+#### 1. Seed Admin User
 
 Create the initial admin user (safe to run multiple times):
 
@@ -329,10 +364,109 @@ Create the initial admin user (safe to run multiple times):
 npm run seed:admin
 ```
 
-**Default Admin Credentials:**
+**Creates:**
 
-- Email: `admin@nowhere.com`
-- Password: `changeme`
+- 1 admin user (admin@nowhere.com / changeme)
+
+#### 2. Seed Sample Users
+
+Create faculty, student, and additional admin users:
+
+```bash
+node src/scripts/seedUsers.js
+```
+
+**Creates:**
+
+- 1 admin user
+- 4 faculty members (required for courses)
+- 5 student users
+
+**Sample Credentials:**
+
+- Faculty: emily.johnson@example.com / password123
+- Student: michael.wilson@example.com / password123
+
+#### 3. Seed Courses
+
+Create sample courses with instructors:
+
+```bash
+npm run seed:courses
+```
+
+**Prerequisites:** Must run `seedUsers.js` first (requires faculty members)
+
+**Creates:**
+
+- 50 sample courses across multiple departments
+- Each course automatically assigned to a faculty instructor
+- Courses include: CS, MATH, PHYS, ENG, BIO, ECE, ME, CE, etc.
+
+#### 4. Seed Course Materials
+
+Add materials (documents, videos, presentations) to courses:
+
+```bash
+npm run seed:materials
+```
+
+**Prerequisites:** Must run `seed:courses` first
+
+**Creates:**
+
+- Sample course materials for each course
+- Various material types (documents, videos, presentations)
+
+#### Complete Setup Workflow
+
+For a full development environment with all sample data:
+
+```bash
+# 1. Seed users (admin, faculty, students)
+node src/scripts/seedUsers.js
+
+# 2. Seed courses with instructors
+npm run seed:courses
+
+# 3. (Optional) Seed course materials
+npm run seed:materials
+```
+
+### Migration Scripts
+
+#### Assign Instructors to Existing Courses
+
+If you have courses without instructors (after updating the schema):
+
+```bash
+node src/scripts/migrateCourseInstructors.js
+```
+
+This script:
+
+- Finds all courses missing an instructor
+- Assigns faculty members in rotation
+- Updates course records
+
+#### Verify Course Instructors
+
+Check that all courses have instructors assigned:
+
+```bash
+node src/scripts/verifyCourseInstructors.js
+```
+
+Shows:
+
+- Total courses
+- Courses with/without instructors
+- Sample course listings with instructor details
+
+### Default Admin Credentials
+
+**Email:** `admin@nowhere.com`  
+**Password:** `changeme`
 
 ⚠️ **Security:** Change the default password immediately after first login in production!
 
@@ -350,8 +484,13 @@ use learneasepro
 # Drop all collections
 db.dropDatabase()
 
-# Reseed admin user
-npm run seed:admin
+# Exit MongoDB shell
+exit
+
+# Reseed with fresh data (recommended full setup)
+node src/scripts/seedUsers.js
+npm run seed:courses
+npm run seed:materials
 ```
 
 ## Optimistic Locking
@@ -424,7 +563,9 @@ Common HTTP status codes:
 - `npm run dev` - Start development server with nodemon
 - `npm test` - Run all tests with coverage
 - `npm run test:watch` - Run tests in watch mode
-- `npm run seed:admin` - Seed database with admin user
+- `npm run seed:admin` - Seed database with admin user only
+- `npm run seed:courses` - Seed database with sample courses
+- `npm run seed:materials` - Seed database with course materials
 - `npm run lint` - Run ESLint (if configured)
 
 ### Adding New Features
@@ -460,6 +601,12 @@ If port 5001 is in use, either:
 - Ensure MongoDB memory server can start
 - Set `NODE_ENV=test` for integration tests
 - Clear Jest cache: `npx jest --clearCache`
+
+### Database Seeding Issues
+
+- **No faculty members found error:** Run `node src/scripts/seedUsers.js` before seeding courses
+- **Courses missing instructors:** Run `node src/scripts/migrateCourseInstructors.js` to assign instructors
+- **Verify instructor assignments:** Run `node src/scripts/verifyCourseInstructors.js`
 
 ### Admin User Issues
 

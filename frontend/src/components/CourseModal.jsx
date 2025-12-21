@@ -1,23 +1,58 @@
 import { useState, useEffect } from "react";
 import { courseService } from "@services/courseService";
+import { userService } from "@services/userService";
 
 function CourseModal({ isOpen, onClose, course }) {
   const [formData, setFormData] = useState({
     courseCode: "",
     name: "",
     description: "",
+    instructor: "",
     isActive: true,
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [instructors, setInstructors] = useState([]);
+  const [loadingInstructors, setLoadingInstructors] = useState(true);
+
+  // Fetch instructors on component mount
+  useEffect(() => {
+    const fetchInstructors = async () => {
+      try {
+        setLoadingInstructors(true);
+        const response = await userService.getFacultyUsers();
+        // Response structure: { success: true, data: [...] }
+        const facultyUsers = response.data || [];
+        setInstructors(facultyUsers);
+      } catch (error) {
+        console.error("Error fetching instructors:", error);
+        setInstructors([]);
+      } finally {
+        setLoadingInstructors(false);
+      }
+    };
+
+    fetchInstructors();
+  }, []);
 
   useEffect(() => {
     if (course) {
+      // Extract instructor ID from instructor object
+      let instructorId = "";
+      if (course.instructor) {
+        if (typeof course.instructor === "object" && course.instructor._id) {
+          instructorId = course.instructor._id;
+        } else if (typeof course.instructor === "string") {
+          instructorId = course.instructor;
+        }
+      }
+
       setFormData({
         courseCode: course.courseCode || "",
         name: course.name || "",
         description: course.description || "",
+        instructor: instructorId,
         isActive: course.isActive !== undefined ? course.isActive : true,
       });
     } else {
@@ -25,6 +60,7 @@ function CourseModal({ isOpen, onClose, course }) {
         courseCode: "",
         name: "",
         description: "",
+        instructor: "",
         isActive: true,
       });
     }
@@ -57,6 +93,10 @@ function CourseModal({ isOpen, onClose, course }) {
 
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
+    }
+
+    if (!formData.instructor.trim()) {
+      newErrors.instructor = "Instructor is required";
     }
 
     setErrors(newErrors);
@@ -200,6 +240,40 @@ function CourseModal({ isOpen, onClose, course }) {
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+            )}
+          </div>
+
+          {/* Instructor */}
+          <div className="mb-4">
+            <label
+              htmlFor="instructor"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Instructor <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="instructor"
+              name="instructor"
+              value={formData.instructor}
+              onChange={handleChange}
+              disabled={loadingInstructors}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                errors.instructor ? "border-red-500" : "border-gray-300"
+              } ${loadingInstructors ? "bg-gray-100 cursor-not-allowed" : ""}`}
+            >
+              <option value="">
+                {loadingInstructors
+                  ? "Loading instructors..."
+                  : "Select an instructor"}
+              </option>
+              {instructors.map((instructor) => (
+                <option key={instructor._id} value={instructor._id}>
+                  {instructor.firstName} {instructor.lastName}
+                </option>
+              ))}
+            </select>
+            {errors.instructor && (
+              <p className="mt-1 text-sm text-red-500">{errors.instructor}</p>
             )}
           </div>
 

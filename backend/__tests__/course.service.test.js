@@ -33,6 +33,28 @@ describe("CourseService", () => {
       expect(result.courseCode).toBe("CS101");
     });
 
+    it("should create a new course with instructor", async () => {
+      const courseData = {
+        courseCode: "CS101",
+        name: "Introduction to Computer Science",
+        description: "A comprehensive introduction",
+        instructor: "faculty123",
+      };
+
+      courseRepository.findByCourseCode.mockResolvedValue(null);
+      courseRepository.create.mockResolvedValue({
+        _id: "123",
+        ...courseData,
+      });
+
+      const result = await courseService.createCourse(courseData);
+
+      expect(courseRepository.findByCourseCode).toHaveBeenCalledWith("CS101");
+      expect(courseRepository.create).toHaveBeenCalledWith(courseData);
+      expect(result.courseCode).toBe("CS101");
+      expect(result.instructor).toBe("faculty123");
+    });
+
     it("should throw error for duplicate course code", async () => {
       const courseData = {
         courseCode: "CS101",

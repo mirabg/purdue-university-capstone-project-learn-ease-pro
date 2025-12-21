@@ -1,6 +1,20 @@
 const Course = require("../src/models/Course");
+const User = require("../src/models/User");
 
 describe("Course Model", () => {
+  let facultyUser;
+
+  beforeEach(async () => {
+    // Create a faculty user for testing before each test
+    facultyUser = await User.create({
+      firstName: "John",
+      lastName: "Doe",
+      email: "faculty@test.com",
+      password: "password123",
+      role: "faculty",
+    });
+  });
+
   describe("Schema Validation", () => {
     it("should create a valid course with all required fields", async () => {
       const courseData = {
@@ -8,6 +22,7 @@ describe("Course Model", () => {
         name: "Introduction to Computer Science",
         description:
           "A comprehensive introduction to computer science fundamentals",
+        instructor: facultyUser._id,
       };
 
       const course = new Course(courseData);
@@ -29,6 +44,7 @@ describe("Course Model", () => {
         courseCode: "cs101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const savedCourse = await course.save();
@@ -39,6 +55,7 @@ describe("Course Model", () => {
       const course = new Course({
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       await expect(course.save()).rejects.toThrow();
@@ -48,6 +65,7 @@ describe("Course Model", () => {
       const course = new Course({
         courseCode: "CS101",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       await expect(course.save()).rejects.toThrow();
@@ -57,6 +75,7 @@ describe("Course Model", () => {
       const course = new Course({
         courseCode: "CS101",
         name: "Introduction to Computer Science",
+        instructor: facultyUser._id,
       });
 
       await expect(course.save()).rejects.toThrow();
@@ -67,6 +86,7 @@ describe("Course Model", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       };
 
       await Course.create(courseData);
@@ -80,6 +100,7 @@ describe("Course Model", () => {
         courseCode: "  CS101  ",
         name: "  Introduction to Computer Science  ",
         description: "  A comprehensive introduction  ",
+        instructor: facultyUser._id,
       });
 
       const savedCourse = await course.save();
@@ -93,6 +114,7 @@ describe("Course Model", () => {
         courseCode: "A".repeat(21),
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       await expect(course.save()).rejects.toThrow();
@@ -103,6 +125,7 @@ describe("Course Model", () => {
         courseCode: "CS101",
         name: "A".repeat(101),
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       await expect(course.save()).rejects.toThrow();
@@ -113,6 +136,7 @@ describe("Course Model", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A".repeat(1001),
+        instructor: facultyUser._id,
       });
 
       await expect(course.save()).rejects.toThrow();
@@ -123,6 +147,7 @@ describe("Course Model", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const savedCourse = await course.save();
@@ -135,6 +160,7 @@ describe("Course Model", () => {
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
         isActive: false,
+        instructor: facultyUser._id,
       });
 
       const savedCourse = await course.save();
@@ -146,6 +172,7 @@ describe("Course Model", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const savedCourse = await course.save();
@@ -158,6 +185,7 @@ describe("Course Model", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const originalUpdatedAt = course.updatedAt;
@@ -180,12 +208,14 @@ describe("Course Model", () => {
         courseCode: "cs101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const duplicateCourse = new Course({
         courseCode: "CS101",
         name: "Different Course",
         description: "Different description",
+        instructor: facultyUser._id,
       });
 
       await expect(duplicateCourse.save()).rejects.toThrow();
@@ -198,6 +228,7 @@ describe("Course Model", () => {
         courseCode: "CS101",
         name: "Introduction to Computer Science",
         description: "A comprehensive introduction",
+        instructor: facultyUser._id,
       });
 
       const courseObject = course.toObject();
@@ -208,6 +239,82 @@ describe("Course Model", () => {
       expect(courseObject).toHaveProperty("isActive");
       expect(courseObject).toHaveProperty("createdAt");
       expect(courseObject).toHaveProperty("updatedAt");
+    });
+  });
+
+  describe("Instructor Field", () => {
+    it("should create course with a valid faculty instructor", async () => {
+      const course = await Course.create({
+        courseCode: "CS201",
+        name: "Data Structures",
+        description: "Learn about data structures",
+        instructor: facultyUser._id,
+      });
+
+      expect(course.instructor).toBeDefined();
+      expect(course.instructor.toString()).toBe(facultyUser._id.toString());
+    });
+
+    it("should fail without required instructor", async () => {
+      const course = new Course({
+        courseCode: "CS202",
+        name: "Algorithms",
+        description: "Learn about algorithms",
+      });
+
+      await expect(course.save()).rejects.toThrow("Please add an instructor");
+    });
+
+    it("should fail when instructor is not a faculty member", async () => {
+      const studentUser = await User.create({
+        firstName: "Jane",
+        lastName: "Smith",
+        email: "student@test.com",
+        password: "password123",
+        role: "student",
+      });
+
+      const course = new Course({
+        courseCode: "CS203",
+        name: "Operating Systems",
+        description: "Learn about operating systems",
+        instructor: studentUser._id,
+      });
+
+      await expect(course.save()).rejects.toThrow();
+    });
+
+    it("should fail when instructor does not exist", async () => {
+      const mongoose = require("mongoose");
+      const fakeId = new mongoose.Types.ObjectId();
+
+      const course = new Course({
+        courseCode: "CS204",
+        name: "Networks",
+        description: "Learn about networks",
+        instructor: fakeId,
+      });
+
+      await expect(course.save()).rejects.toThrow();
+    });
+
+    it("should populate instructor information", async () => {
+      const course = await Course.create({
+        courseCode: "CS205",
+        name: "Database Systems",
+        description: "Learn about databases",
+        instructor: facultyUser._id,
+      });
+
+      const populatedCourse = await Course.findById(course._id).populate(
+        "instructor",
+        "firstName lastName email"
+      );
+
+      expect(populatedCourse.instructor).toBeDefined();
+      expect(populatedCourse.instructor.firstName).toBe("John");
+      expect(populatedCourse.instructor.lastName).toBe("Doe");
+      expect(populatedCourse.instructor.email).toBe("faculty@test.com");
     });
   });
 });

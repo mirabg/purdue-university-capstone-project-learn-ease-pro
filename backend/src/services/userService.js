@@ -126,6 +126,21 @@ class UserService {
   }
 
   /**
+   * Get all faculty users (instructors)
+   */
+  async getFacultyUsers() {
+    try {
+      const facultyUsers = await userRepository.findAll({
+        role: "faculty",
+        isActive: true,
+      });
+      return facultyUsers;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Update user
    */
   async updateUser(id, updateData, version) {

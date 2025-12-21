@@ -1,6 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const Course = require("../models/Course");
+const User = require("../models/User");
 
 const sampleCourses = [
   {
@@ -361,10 +362,24 @@ const seedCourses = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
 
+    // Get all faculty members
+    const facultyMembers = await User.find({ role: "faculty", isActive: true });
+
+    if (facultyMembers.length === 0) {
+      console.error(
+        "❌ No faculty members found. Please run seedUsers.js first."
+      );
+      process.exit(1);
+    }
+
+    console.log(`✅ Found ${facultyMembers.length} faculty members\n`);
+
     let createdCount = 0;
     let skippedCount = 0;
 
-    for (const courseData of sampleCourses) {
+    for (let i = 0; i < sampleCourses.length; i++) {
+      const courseData = sampleCourses[i];
+
       // Check if course already exists
       const existingCourse = await Course.findOne({
         courseCode: courseData.courseCode,
@@ -378,9 +393,18 @@ const seedCourses = async () => {
         continue;
       }
 
-      // Create course
-      await Course.create(courseData);
-      console.log(`✅ Created: ${courseData.courseCode} - ${courseData.name}`);
+      // Assign instructor (cycle through faculty members)
+      const instructor = facultyMembers[i % facultyMembers.length];
+
+      // Create course with instructor
+      await Course.create({
+        ...courseData,
+        instructor: instructor._id,
+      });
+
+      console.log(
+        `✅ Created: ${courseData.courseCode} - ${courseData.name} (Instructor: ${instructor.firstName} ${instructor.lastName})`
+      );
       createdCount++;
     }
 

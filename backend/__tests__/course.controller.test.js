@@ -38,6 +38,33 @@ describe("Course Controller", () => {
 
       expect(courseService.createCourse).toHaveBeenCalledWith({
         ...courseData,
+        instructor: undefined,
+        isActive: true,
+      });
+      expect(mockRes.status).toHaveBeenCalledWith(201);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        data: mockCourse,
+      });
+    });
+
+    it("should create course with instructor successfully", async () => {
+      const courseData = {
+        courseCode: "CS101",
+        name: "Introduction to Computer Science",
+        description: "A comprehensive introduction",
+        instructor: "faculty123",
+      };
+
+      const mockCourse = { _id: "course123", ...courseData, isActive: true };
+
+      mockReq.body = courseData;
+      courseService.createCourse.mockResolvedValue(mockCourse);
+
+      await courseController.createCourse(mockReq, mockRes);
+
+      expect(courseService.createCourse).toHaveBeenCalledWith({
+        ...courseData,
         isActive: true,
       });
       expect(mockRes.status).toHaveBeenCalledWith(201);

@@ -37,6 +37,15 @@ export const userService = {
   },
 
   /**
+   * Get all faculty users (instructors)
+   * @returns {Promise} List of faculty users
+   */
+  getFacultyUsers: async () => {
+    const response = await api.get("/users/faculty");
+    return response.data;
+  },
+
+  /**
    * Create new user
    * @param {Object} userData - User data
    * @returns {Promise} Created user data

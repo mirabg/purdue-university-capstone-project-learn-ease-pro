@@ -136,6 +136,27 @@ exports.getAllUsers = async (req, res) => {
 };
 
 /**
+ * @desc    Get all faculty users (instructors)
+ * @route   GET /api/users/faculty
+ * @access  Public (needed for course creation)
+ */
+exports.getFacultyUsers = async (req, res) => {
+  try {
+    const facultyUsers = await userService.getFacultyUsers();
+
+    res.status(200).json({
+      success: true,
+      data: facultyUsers,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
  * @desc    Get user by ID
  * @route   GET /api/users/:id
  * @access  Public (should be protected in production)
