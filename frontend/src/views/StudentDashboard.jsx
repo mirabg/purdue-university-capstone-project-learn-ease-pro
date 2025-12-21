@@ -2,13 +2,23 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "@services/authService";
 import { enrollmentService } from "@services/enrollmentService";
+import { courseService } from "@services/courseService";
 import api from "@services/api";
+import CourseRating from "@components/CourseRating";
+import CourseRatingsModal from "@components/CourseRatingsModal";
+import AddEditRatingModal from "@components/AddEditRatingModal";
 
 function StudentDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [addEditRatingModalOpen, setAddEditRatingModalOpen] = useState(false);
+  const [selectedCourseForRating, setSelectedCourseForRating] = useState(null);
+  const [existingFeedback, setExistingFeedback] = useState(null);
+  const [userFeedbackMap, setUserFeedbackMap] = useState({});
 
   // Get status badge styling based on enrollment status
   const getStatusBadgeClass = (status) => {
@@ -61,11 +71,52 @@ function StudentDashboard() {
       const enrollments = enrollmentsResponse.data || [];
 
       setEnrolledCourses(enrollments);
+
+      // Fetch user feedback for all accepted courses
+      const feedbackMap = {};
+      const acceptedEnrollments = enrollments.filter(
+        (e) => e.status?.toLowerCase() === "accepted"
+      );
+
+      await Promise.all(
+        acceptedEnrollments.map(async (enrollment) => {
+          try {
+            const response = await courseService.getMyCourseFeedback(
+              enrollment.course._id
+            );
+            if (response.success && response.data) {
+              feedbackMap[enrollment.course._id] = response.data;
+            }
+          } catch (err) {
+            // No feedback for this course, that's okay
+          }
+        })
+      );
+
+      setUserFeedbackMap(feedbackMap);
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewRatings = (course) => {
+    setSelectedCourse(course);
+    setRatingsModalOpen(true);
+  };
+
+  const handleAddEditRating = async (course) => {
+    // Get existing feedback from the map
+    const feedback = userFeedbackMap[course._id] || null;
+    setExistingFeedback(feedback);
+    setSelectedCourseForRating(course);
+    setAddEditRatingModalOpen(true);
+  };
+
+  const handleRatingSuccess = () => {
+    // Reload the courses to reflect the updated rating
+    loadData();
   };
 
   if (!user) {
@@ -99,7 +150,7 @@ function StudentDashboard() {
         {/* My Courses Section */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-6 py-5 border-b border-gray-200">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0">
                   <svg
@@ -120,10 +171,35 @@ function StudentDashboard() {
                   My Courses
                 </h2>
               </div>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                {enrolledCourses.length}{" "}
-                {enrolledCourses.length === 1 ? "Course" : "Courses"}
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  Total: {enrolledCourses.length}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Accepted:{" "}
+                  {
+                    enrolledCourses.filter(
+                      (e) => e.status?.toLowerCase() === "accepted"
+                    ).length
+                  }
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Pending:{" "}
+                  {
+                    enrolledCourses.filter(
+                      (e) => e.status?.toLowerCase() === "pending"
+                    ).length
+                  }
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  Denied:{" "}
+                  {
+                    enrolledCourses.filter(
+                      (e) => e.status?.toLowerCase() === "denied"
+                    ).length
+                  }
+                </span>
+              </div>
             </div>
           </div>
           <div className="p-6">
@@ -159,7 +235,7 @@ function StudentDashboard() {
                     <h3 className="font-semibold text-gray-900 mb-2">
                       {enrollment.course.name}
                     </h3>
-                    <p className="text-sm font-medium text-primary-600 mb-2">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
                       {enrollment.course.courseCode}
                     </p>
                     {enrollment.course.instructor && (
@@ -172,6 +248,16 @@ function StudentDashboard() {
                     <p className="text-xs text-gray-500 line-clamp-2 mb-3">
                       {enrollment.course.description}
                     </p>
+                    {/* Rating Display */}
+                    <div className="mb-3">
+                      <CourseRating
+                        averageRating={enrollment.course.averageRating}
+                        ratingCount={enrollment.course.ratingCount}
+                        size="sm"
+                        clickable={true}
+                        onClick={() => handleViewRatings(enrollment.course)}
+                      />
+                    </div>
                     {enrollment.status?.toLowerCase() === "denied" &&
                       enrollment.comments && (
                         <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -183,14 +269,40 @@ function StudentDashboard() {
                           </p>
                         </div>
                       )}
-                    <div className="mt-auto flex items-center justify-between">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
-                          enrollment.status
-                        )}`}
-                      >
-                        {capitalizeStatus(enrollment.status)}
-                      </span>
+                    <div className="mt-auto">
+                      <div className="flex items-center justify-between mb-3">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
+                            enrollment.status
+                          )}`}
+                        >
+                          {capitalizeStatus(enrollment.status)}
+                        </span>
+                      </div>
+                      {/* Add/Edit Rating Button for Accepted Courses */}
+                      {enrollment.status?.toLowerCase() === "accepted" && (
+                        <button
+                          onClick={() => handleAddEditRating(enrollment.course)}
+                          className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
+                        >
+                          <svg
+                            className="h-4 w-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                            />
+                          </svg>
+                          {userFeedbackMap[enrollment.course._id]
+                            ? "Edit Your Rating"
+                            : "Rate This Course"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -244,6 +356,26 @@ function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Course Ratings Modal */}
+      <CourseRatingsModal
+        isOpen={ratingsModalOpen}
+        onClose={() => setRatingsModalOpen(false)}
+        course={selectedCourse}
+      />
+
+      {/* Add/Edit Rating Modal */}
+      <AddEditRatingModal
+        isOpen={addEditRatingModalOpen}
+        onClose={() => {
+          setAddEditRatingModalOpen(false);
+          setSelectedCourseForRating(null);
+          setExistingFeedback(null);
+        }}
+        course={selectedCourseForRating}
+        existingFeedback={existingFeedback}
+        onSuccess={handleRatingSuccess}
+      />
     </div>
   );
 }

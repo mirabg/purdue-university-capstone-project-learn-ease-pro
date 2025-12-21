@@ -6,6 +6,8 @@ import { enrollmentService } from "@services/enrollmentService";
 import CourseModal from "@components/CourseModal";
 import CourseMaterialsModal from "@components/CourseMaterialsModal";
 import EnrollmentManagementModal from "@components/EnrollmentManagementModal";
+import CourseRating from "@components/CourseRating";
+import CourseRatingsModal from "@components/CourseRatingsModal";
 
 function CourseManagement() {
   const [courses, setCourses] = useState([]);
@@ -23,6 +25,9 @@ function CourseManagement() {
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
   const [enrollmentCourse, setEnrollmentCourse] = useState(null);
   const [enrollmentStats, setEnrollmentStats] = useState({});
+  const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
+  const [selectedCourseForRatings, setSelectedCourseForRatings] =
+    useState(null);
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
@@ -146,6 +151,11 @@ function CourseManagement() {
     if (shouldRefresh) {
       fetchCourses();
     }
+  };
+
+  const handleViewRatings = (course) => {
+    setSelectedCourseForRatings(course);
+    setRatingsModalOpen(true);
   };
 
   const handlePageChange = (newPage) => {
@@ -343,6 +353,16 @@ function CourseManagement() {
                       <div className="text-xs text-gray-500 mb-3 line-clamp-2">
                         {course.description}
                       </div>
+                      {/* Rating Display */}
+                      <div className="mb-3">
+                        <CourseRating
+                          averageRating={course.averageRating}
+                          ratingCount={course.ratingCount}
+                          size="sm"
+                          clickable={true}
+                          onClick={() => handleViewRatings(course)}
+                        />
+                      </div>
                       {(isFaculty || isAdmin) &&
                         enrollmentStats[course._id] && (
                           <div className="flex flex-wrap gap-1 mb-3">
@@ -432,6 +452,12 @@ function CourseManagement() {
                       >
                         Status
                       </th>
+                      <th
+                        scope="col"
+                        className="hidden md:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Rating
+                      </th>
                       {(isFaculty || isAdmin) && (
                         <th
                           scope="col"
@@ -474,6 +500,15 @@ function CourseManagement() {
                           >
                             {course.isActive ? "Active" : "Inactive"}
                           </span>
+                        </td>
+                        <td className="hidden md:table-cell px-4 lg:px-6 py-4 whitespace-nowrap">
+                          <CourseRating
+                            averageRating={course.averageRating}
+                            ratingCount={course.ratingCount}
+                            size="sm"
+                            clickable={true}
+                            onClick={() => handleViewRatings(course)}
+                          />
                         </td>
                         {(isFaculty || isAdmin) && (
                           <td className="hidden xl:table-cell px-4 lg:px-6 py-4 whitespace-nowrap">
@@ -672,6 +707,13 @@ function CourseManagement() {
           }
         }}
         course={enrollmentCourse}
+      />
+
+      {/* Course Ratings Modal */}
+      <CourseRatingsModal
+        isOpen={ratingsModalOpen}
+        onClose={() => setRatingsModalOpen(false)}
+        course={selectedCourseForRatings}
       />
     </div>
   );
