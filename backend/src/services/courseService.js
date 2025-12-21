@@ -50,7 +50,7 @@ class CourseService {
   /**
    * Get all courses with pagination and search
    */
-  async getAllCourses(page = 1, limit = 10, search = "") {
+  async getAllCourses(page = 1, limit = 10, search = "", instructorId = null) {
     try {
       const skip = (page - 1) * limit;
 
@@ -64,6 +64,11 @@ class CourseService {
             { description: { $regex: search, $options: "i" } },
           ],
         };
+      }
+
+      // Add instructor filter for faculty users
+      if (instructorId) {
+        filter.instructor = instructorId;
       }
 
       const courses = await courseRepository.findWithPagination(

@@ -93,7 +93,10 @@ A robust Express.js REST API with MongoDB, featuring JWT authentication, role-ba
    # Step 2: Seed courses (requires users with faculty role)
    npm run seed:courses
 
-   # Step 3: (Optional) Seed course materials
+   # Step 3: Seed course enrollments (requires courses and students)
+   npm run seed:enrollments
+
+   # Step 4: (Optional) Seed course materials
    npm run seed:materials
    ```
 
@@ -166,6 +169,38 @@ curl -X GET http://localhost:5001/api/users \
 | GET    | `/api/users/:id` | Get user by ID | Admin or Owner |
 | PUT    | `/api/users/:id` | Update user    | Admin or Owner |
 | DELETE | `/api/users/:id` | Delete user    | Admin or Owner |
+
+### Course Management
+
+| Method | Endpoint                    | Description            | Access        |
+| ------ | --------------------------- | ---------------------- | ------------- |
+| POST   | `/api/courses`              | Create new course      | Admin/Faculty |
+| GET    | `/api/courses`              | Get all courses        | Authenticated |
+| GET    | `/api/courses/:id`          | Get course by ID       | Authenticated |
+| PUT    | `/api/courses/:id`          | Update course          | Admin/Faculty |
+| DELETE | `/api/courses/:id`          | Delete course          | Admin         |
+| POST   | `/api/courses/:id/upload`   | Upload course material | Admin/Faculty |
+| POST   | `/api/courses/:id/details`  | Add course detail      | Admin/Faculty |
+| GET    | `/api/courses/:id/details`  | Get course details     | Authenticated |
+| PUT    | `/api/courses/:id/details`  | Update course detail   | Admin/Faculty |
+| DELETE | `/api/courses/:id/details`  | Delete course detail   | Admin/Faculty |
+| POST   | `/api/courses/:id/feedback` | Add course feedback    | Student       |
+| GET    | `/api/courses/:id/feedback` | Get course feedback    | Authenticated |
+
+### Course Enrollment Management
+
+| Method | Endpoint                                    | Description                       | Access                   |
+| ------ | ------------------------------------------- | --------------------------------- | ------------------------ |
+| POST   | `/api/enrollments`                          | Create enrollment                 | Student (self) or Admin  |
+| GET    | `/api/enrollments`                          | Get all enrollments (filtered)    | Authenticated            |
+| GET    | `/api/enrollments/:id`                      | Get enrollment by ID              | Owner, Faculty, or Admin |
+| PUT    | `/api/enrollments/:id`                      | Update enrollment                 | Admin/Faculty            |
+| PATCH  | `/api/enrollments/:id/status`               | Update enrollment status          | Admin/Faculty            |
+| DELETE | `/api/enrollments/:id`                      | Delete enrollment                 | Owner or Admin           |
+| GET    | `/api/enrollments/course/:courseId`         | Get enrollments for a course      | Faculty/Admin            |
+| GET    | `/api/enrollments/student/:studentId`       | Get enrollments for a student     | Owner or Admin           |
+| GET    | `/api/enrollments/course/:courseId/stats`   | Get course enrollment statistics  | Faculty/Admin            |
+| GET    | `/api/enrollments/student/:studentId/stats` | Get student enrollment statistics | Owner or Admin           |
 
 ### Health Check
 
@@ -265,6 +300,40 @@ curl -X PUT http://localhost:5001/api/users/USER_ID \
 }
 ```
 
+## Course Schema
+
+```javascript
+{
+  courseCode: String (required, unique, uppercase, max 20 chars)
+  name: String (required, max 100 chars)
+  description: String (required, max 1000 chars)
+  instructor: ObjectId (ref: User, required, must be faculty role)
+  isActive: Boolean (default: true)
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+## Course Enrollment Schema
+
+```javascript
+{
+  course: ObjectId (ref: Course, required)
+  student: ObjectId (ref: User, required, must be student role)
+  status: String (pending|accepted|denied, default: pending)
+  comments: String (max 500 chars)
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+**Features:**
+
+- Compound unique index on `course + student` prevents duplicate enrollments
+- Pre-save validation ensures student has student role
+- Automatic population of course and student details
+- Status workflow: pending → accepted/denied
+
 ## Project Structure
 
 ```
@@ -274,24 +343,42 @@ backend/
 │   │   ├── database.js  # MongoDB connection
 │   │   └── jwt.js       # JWT utilities
 │   ├── controllers/     # Request handlers
+│   │   ├── courseController.js
+│   │   ├── courseEnrollmentController.js
+│   │   ├── uploadController.js
 │   │   └── userController.js
 │   ├── middleware/      # Custom middleware
-│   │   └── auth.js      # Authentication & authorization
+│   │   ├── auth.js      # Authentication & authorization
+│   │   └── upload.js    # File upload handling
 │   ├── models/          # Mongoose schemas
+│   │   ├── Course.js
+│   │   ├── CourseDetail.js
+│   │   ├── CourseEnrollment.js
+│   │   ├── CourseFeedback.js
 │   │   └── User.js
 │   ├── repositories/    # Data access layer
+│   │   ├── courseDetailRepository.js
+│   │   ├── courseEnrollmentRepository.js
+│   │   ├── courseFeedbackRepository.js
+│   │   ├── courseRepository.js
 │   │   └── userRepository.js
 │   ├── routes/          # Route definitions
 │   │   ├── index.js
+│   │   ├── courseRoutes.js
+│   │   ├── courseEnrollmentRoutes.js
 │   │   └── userRoutes.js
 │   ├── scripts/         # Utility scripts
 │   │   ├── seedAdmin.js # Seed initial admin user
 │   │   ├── seedUsers.js # Seed sample users (faculty, students)
 │   │   ├── seedCourses.js # Seed sample courses
+│   │   ├── seedEnrollments.js # Seed student enrollments
 │   │   ├── seedCourseMaterials.js # Seed course materials
+│   │   ├── redistributeCourses.js # Redistribute courses among faculty
 │   │   ├── migrateCourseInstructors.js # Assign instructors to existing courses
 │   │   └── verifyCourseInstructors.js # Verify instructor assignments
 │   └── services/        # Business logic
+│       ├── courseEnrollmentService.js
+│       ├── courseService.js
 │       └── userService.js
 ├── __tests__/           # Test files
 │   ├── integration/     # Integration tests
@@ -418,6 +505,28 @@ npm run seed:materials
 - Sample course materials for each course
 - Various material types (documents, videos, presentations)
 
+#### 4. Seed Course Enrollments
+
+Create realistic enrollment data for students:
+
+```bash
+npm run seed:enrollments
+```
+
+**Prerequisites:** Must run both `seedUsers.js` and `seed:courses` first
+
+**Creates:**
+
+- 40+ student enrollment records
+- Each student enrolled in 3-8 courses
+- Realistic status distribution:
+  - 70% accepted enrollments
+  - 20% pending enrollments
+  - 10% denied enrollments
+- Appropriate comments for each status
+
+**Note:** Running the script multiple times will clear existing enrollments and create fresh data.
+
 #### Complete Setup Workflow
 
 For a full development environment with all sample data:
@@ -429,7 +538,10 @@ node src/scripts/seedUsers.js
 # 2. Seed courses with instructors
 npm run seed:courses
 
-# 3. (Optional) Seed course materials
+# 3. Seed student enrollments
+npm run seed:enrollments
+
+# 4. (Optional) Seed course materials
 npm run seed:materials
 ```
 

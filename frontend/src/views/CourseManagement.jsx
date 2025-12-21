@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { courseService } from "@services/courseService";
 import { authService } from "@services/authService";
+import { enrollmentService } from "@services/enrollmentService";
 import CourseModal from "@components/CourseModal";
 import CourseMaterialsModal from "@components/CourseMaterialsModal";
+import EnrollmentManagementModal from "@components/EnrollmentManagementModal";
 
 function CourseManagement() {
   const [courses, setCourses] = useState([]);
@@ -18,8 +20,16 @@ function CourseManagement() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [isMaterialsModalOpen, setIsMaterialsModalOpen] = useState(false);
   const [materialsCourse, setMaterialsCourse] = useState(null);
+  const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
+  const [enrollmentCourse, setEnrollmentCourse] = useState(null);
+  const [enrollmentStats, setEnrollmentStats] = useState({});
   const itemsPerPage = 10;
   const navigate = useNavigate();
+
+  // Get current user
+  const currentUser = authService.getCurrentUser();
+  const isFaculty = currentUser?.role === "faculty";
+  const isAdmin = currentUser?.role === "admin";
 
   // Get dashboard URL based on user role
   const getDashboardUrl = () => {
@@ -53,12 +63,40 @@ function CourseManagement() {
         setTotalPages(response.totalPages);
         setTotalCourses(response.count);
         console.log("Total Courses Updated:", response.count);
+
+        // Fetch enrollment stats for each course
+        if ((isFaculty || isAdmin) && response.data.length > 0) {
+          fetchEnrollmentStats(response.data);
+        }
       }
     } catch (err) {
       console.error("Error fetching courses:", err);
       setError(err.response?.data?.message || "Failed to fetch courses");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEnrollmentStats = async (coursesData) => {
+    try {
+      const statsPromises = coursesData.map((course) =>
+        enrollmentService
+          .getCourseEnrollmentStats(course._id)
+          .then((res) => ({ courseId: course._id, stats: res.data }))
+          .catch(() => ({ courseId: course._id, stats: null }))
+      );
+
+      const results = await Promise.all(statsPromises);
+      const statsMap = {};
+      results.forEach((result) => {
+        if (result.stats) {
+          statsMap[result.courseId] = result.stats;
+        }
+      });
+
+      setEnrollmentStats(statsMap);
+    } catch (err) {
+      console.error("Error fetching enrollment stats:", err);
     }
   };
 
@@ -80,6 +118,11 @@ function CourseManagement() {
   const handleManageMaterials = (course) => {
     setMaterialsCourse(course);
     setIsMaterialsModalOpen(true);
+  };
+
+  const handleManageEnrollments = (course) => {
+    setEnrollmentCourse(course);
+    setIsEnrollmentModalOpen(true);
   };
 
   const handleDeleteCourse = async (courseId) => {
@@ -141,25 +184,27 @@ function CourseManagement() {
             <h1 className="text-3xl font-bold text-gray-900">
               Course Management
             </h1>
-            <button
-              onClick={handleCreateCourse}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              <svg
-                className="mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {!isFaculty && (
+              <button
+                onClick={handleCreateCourse}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Create Course
-            </button>
+                <svg
+                  className="mr-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Create Course
+              </button>
+            )}
           </div>
         </div>
 
@@ -258,7 +303,7 @@ function CourseManagement() {
                   ? "No courses found matching your search"
                   : "No courses yet"}
               </p>
-              {!searchQuery && (
+              {!searchQuery && !isFaculty && (
                 <button
                   onClick={handleCreateCourse}
                   className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
@@ -297,6 +342,14 @@ function CourseManagement() {
                       >
                         Status
                       </th>
+                      {(isFaculty || isAdmin) && (
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Enrollments
+                        </th>
+                      )}
                       <th
                         scope="col"
                         className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -319,7 +372,7 @@ function CourseManagement() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500 max-w-xs truncate">
+                          <div className="text-sm text-gray-500">
                             {course.description}
                           </div>
                         </td>
@@ -332,31 +385,75 @@ function CourseManagement() {
                             {course.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
+                        {(isFaculty || isAdmin) && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {enrollmentStats[course._id] ? (
+                              <div className="text-xs space-y-1">
+                                <div className="flex items-center">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                    {enrollmentStats[course._id].total} Total
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    {enrollmentStats[course._id].pending}{" "}
+                                    Pending
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                    {enrollmentStats[course._id].accepted}{" "}
+                                    Accepted
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    {enrollmentStats[course._id].denied} Denied
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
+                          </td>
+                        )}
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          {(isFaculty || isAdmin) && (
+                            <button
+                              onClick={() => handleManageEnrollments(course)}
+                              className="text-blue-600 hover:text-blue-900 mr-4"
+                            >
+                              Enrollments
+                            </button>
+                          )}
                           <button
                             onClick={() => handleManageMaterials(course)}
                             className="text-green-600 hover:text-green-900 mr-4"
                           >
                             Materials
                           </button>
-                          <button
-                            onClick={() => handleEditCourse(course)}
-                            className="text-primary-600 hover:text-primary-900 mr-4"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCourse(course._id)}
-                            className={`${
-                              deleteConfirmId === course._id
-                                ? "text-red-700 font-bold"
-                                : "text-red-600 hover:text-red-900"
-                            }`}
-                          >
-                            {deleteConfirmId === course._id
-                              ? "Confirm Delete?"
-                              : "Delete"}
-                          </button>
+                          {!isFaculty && (
+                            <>
+                              <button
+                                onClick={() => handleEditCourse(course)}
+                                className="text-primary-600 hover:text-primary-900 mr-4"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCourse(course._id)}
+                                className={`${
+                                  deleteConfirmId === course._id
+                                    ? "text-red-700 font-bold"
+                                    : "text-red-600 hover:text-red-900"
+                                }`}
+                              >
+                                {deleteConfirmId === course._id
+                                  ? "Confirm Delete?"
+                                  : "Delete"}
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -470,6 +567,19 @@ function CourseManagement() {
         isOpen={isMaterialsModalOpen}
         onClose={() => setIsMaterialsModalOpen(false)}
         course={materialsCourse}
+      />
+
+      {/* Enrollment Management Modal */}
+      <EnrollmentManagementModal
+        isOpen={isEnrollmentModalOpen}
+        onClose={() => {
+          setIsEnrollmentModalOpen(false);
+          // Refresh enrollment stats when modal closes
+          if (enrollmentCourse) {
+            fetchCourses();
+          }
+        }}
+        course={enrollmentCourse}
       />
     </div>
   );

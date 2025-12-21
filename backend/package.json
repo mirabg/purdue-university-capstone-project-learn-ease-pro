@@ -10,7 +10,8 @@
     "test:watch": "jest --watch",
     "seed:admin": "node src/scripts/seedAdmin.js",
     "seed:courses": "node src/scripts/seedCourses.js",
-    "seed:materials": "node src/scripts/seedCourseMaterials.js"
+    "seed:materials": "node src/scripts/seedCourseMaterials.js",
+    "seed:enrollments": "node src/scripts/seedEnrollments.js"
   },
   "keywords": [
     "express",

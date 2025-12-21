@@ -47,10 +47,17 @@ exports.getAllCourses = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "" } = req.query;
 
+    // For faculty users, filter by instructor
+    let instructorId = null;
+    if (req.user && req.user.role === "faculty") {
+      instructorId = req.user.id;
+    }
+
     const result = await courseService.getAllCourses(
       parseInt(page),
       parseInt(limit),
-      search
+      search,
+      instructorId
     );
 
     res.status(200).json({

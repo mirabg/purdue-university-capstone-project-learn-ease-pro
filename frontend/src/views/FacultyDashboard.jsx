@@ -52,10 +52,10 @@ function FacultyDashboard() {
                 </div>
                 <div className="flex-1 min-w-0 text-center">
                   <p className="text-lg font-bold text-gray-900">
-                    Manage Courses
+                    Manage Your Courses
                   </p>
                   <p className="text-sm text-gray-600 mt-1">
-                    View, create, edit, and manage courses
+                    View, create, edit, and manage your courses
                   </p>
                 </div>
                 <div className="flex-shrink-0">
@@ -101,9 +101,9 @@ function FacultyDashboard() {
                 Faculty Resources
               </h3>
               <p className="mt-2 text-sm text-blue-700">
-                As a faculty member, you can create and manage courses, upload
-                course materials, and track student enrollments. Click "Manage
-                Courses" to get started.
+                As a faculty member, you can create and manage your courses,
+                upload course materials, and track student enrollments. Click
+                "Manage Your Courses" to get started.
               </p>
             </div>
           </div>
