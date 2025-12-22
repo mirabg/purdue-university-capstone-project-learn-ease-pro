@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import {
   useCreateCourseMutation,
   useUpdateCourseMutation,
+  useGetFacultyUsersQuery,
 } from "@/store/apiSlice";
-import { userService } from "@services/userService";
 import Icon from "@components/Icon";
 
 function CourseModal({ isOpen, onClose, course }) {
@@ -16,33 +16,15 @@ function CourseModal({ isOpen, onClose, course }) {
   });
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState(null);
-  const [instructors, setInstructors] = useState([]);
-  const [loadingInstructors, setLoadingInstructors] = useState(true);
 
-  // RTK Query mutations
+  // RTK Query hooks
   const [createCourse, { isLoading: isCreating }] = useCreateCourseMutation();
   const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation();
+  const { data: facultyData, isLoading: loadingInstructors } =
+    useGetFacultyUsersQuery();
+
   const loading = isCreating || isUpdating;
-
-  // Fetch instructors on component mount
-  useEffect(() => {
-    const fetchInstructors = async () => {
-      try {
-        setLoadingInstructors(true);
-        const response = await userService.getFacultyUsers();
-        // Response structure: { success: true, data: [...] }
-        const facultyUsers = response.data || [];
-        setInstructors(facultyUsers);
-      } catch (error) {
-        console.error("Error fetching instructors:", error);
-        setInstructors([]);
-      } finally {
-        setLoadingInstructors(false);
-      }
-    };
-
-    fetchInstructors();
-  }, []);
+  const instructors = facultyData?.data || [];
 
   useEffect(() => {
     if (course) {

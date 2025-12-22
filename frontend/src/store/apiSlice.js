@@ -96,6 +96,10 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+    getFacultyUsers: builder.query({
+      query: () => "/users/faculty",
+      providesTags: ["User"],
+    }),
 
     // Course endpoints
     getCourses: builder.query({
@@ -235,6 +239,12 @@ export const apiSlice = createApi({
         "Rating",
       ],
     }),
+    getMyCourseFeedback: builder.query({
+      query: (courseId) => `/courses/${courseId}/feedback/my`,
+      providesTags: (result, error, courseId) => [
+        { type: "Rating", id: `my-${courseId}` },
+      ],
+    }),
 
     // Course Materials endpoints
     getCourseMaterials: builder.query({
@@ -298,6 +308,44 @@ export const apiSlice = createApi({
         { type: "Post", id: courseId },
       ],
     }),
+    togglePinPost: builder.mutation({
+      query: (postId) => ({
+        url: `/posts/${postId}/pin`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Post"],
+    }),
+    getReplies: builder.query({
+      query: (postId) => `/posts/${postId}/replies`,
+      providesTags: (result, error, postId) => [
+        { type: "Post", id: `replies-${postId}` },
+      ],
+    }),
+    createReply: builder.mutation({
+      query: ({ postId, content }) => ({
+        url: `/posts/${postId}/replies`,
+        method: "POST",
+        body: { content },
+      }),
+      invalidatesTags: (result, error, { postId }) => [
+        { type: "Post", id: `replies-${postId}` },
+      ],
+    }),
+    updateReply: builder.mutation({
+      query: ({ replyId, content }) => ({
+        url: `/replies/${replyId}`,
+        method: "PUT",
+        body: { content },
+      }),
+      invalidatesTags: ["Post"],
+    }),
+    deleteReply: builder.mutation({
+      query: (replyId) => ({
+        url: `/replies/${replyId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Post"],
+    }),
   }),
 });
 
@@ -312,6 +360,7 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useGetFacultyUsersQuery,
   // Courses
   useGetCoursesQuery,
   useGetCourseByIdQuery,
@@ -331,6 +380,7 @@ export const {
   useCreateCourseFeedbackMutation,
   useUpdateCourseFeedbackMutation,
   useDeleteCourseFeedbackMutation,
+  useGetMyCourseFeedbackQuery,
   // Materials
   useGetCourseMaterialsQuery,
   useUploadCourseMaterialMutation,
@@ -340,4 +390,9 @@ export const {
   useCreatePostMutation,
   useUpdatePostMutation,
   useDeletePostMutation,
+  useTogglePinPostMutation,
+  useGetRepliesQuery,
+  useCreateReplyMutation,
+  useUpdateReplyMutation,
+  useDeleteReplyMutation,
 } = apiSlice;

@@ -3,7 +3,13 @@ import PropTypes from "prop-types";
 import { formatDistanceToNow } from "date-fns";
 import { useSelector } from "react-redux";
 import { selectUser } from "@/store/slices/authSlice";
-import { coursePostService } from "@services/coursePostService";
+import {
+  useGetRepliesQuery,
+  useCreateReplyMutation,
+  useUpdateReplyMutation,
+  useDeleteReplyMutation,
+  useTogglePinPostMutation,
+} from "@/store/apiSlice";
 import ConfirmModal from "./ConfirmModal";
 import Icon from "@components/Icon";
 
@@ -16,10 +22,7 @@ function PostCard({
   courseInstructor,
 }) {
   const [showReplies, setShowReplies] = useState(false);
-  const [replies, setReplies] = useState([]);
   const [replyContent, setReplyContent] = useState("");
-  const [loadingReplies, setLoadingReplies] = useState(false);
-  const [submittingReply, setSubmittingReply] = useState(false);
   const [editingReply, setEditingReply] = useState(null);
   const [editReplyContent, setEditReplyContent] = useState("");
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -29,6 +32,19 @@ function PostCard({
   const isFaculty = currentUser?.role === "faculty";
   const isOwner = currentUser?.id === post.user._id;
   const isInstructor = currentUser?.id === courseInstructor?._id;
+
+  // RTK Query hooks
+  const { data: repliesData, isLoading: loadingReplies } = useGetRepliesQuery(
+    post._id,
+    { skip: !showReplies }
+  );
+  const [createReply, { isLoading: submittingReply }] =
+    useCreateReplyMutation();
+  const [updateReply] = useUpdateReplyMutation();
+  const [deleteReply] = useDeleteReplyMutation();
+  const [togglePinPost] = useTogglePinPostMutation();
+
+  const replies = repliesData?.data || [];
 
   // Get role badge styling
   const getRoleBadge = (role) => {
@@ -43,22 +59,7 @@ function PostCard({
     return badges[role] || badges.student;
   };
 
-  const loadReplies = async () => {
-    try {
-      setLoadingReplies(true);
-      const response = await coursePostService.getRepliesByPost(post._id);
-      setReplies(response.data || []);
-    } catch (error) {
-      console.error("Error loading replies:", error);
-    } finally {
-      setLoadingReplies(false);
-    }
-  };
-
   const handleToggleReplies = () => {
-    if (!showReplies && replies.length === 0) {
-      loadReplies();
-    }
     setShowReplies(!showReplies);
   };
 
@@ -67,18 +68,12 @@ function PostCard({
     if (!replyContent.trim()) return;
 
     try {
-      setSubmittingReply(true);
-      const response = await coursePostService.createReply(post._id, {
-        content: replyContent,
-      });
-      setReplies([...replies, response.data]);
+      await createReply({ postId: post._id, content: replyContent }).unwrap();
       setReplyContent("");
       if (onReply) onReply();
     } catch (error) {
       console.error("Error submitting reply:", error);
-      alert(error.response?.data?.message || "Failed to submit reply");
-    } finally {
-      setSubmittingReply(false);
+      alert(error.data?.message || "Failed to submit reply");
     }
   };
 
@@ -86,15 +81,15 @@ function PostCard({
     if (!editReplyContent.trim()) return;
 
     try {
-      const response = await coursePostService.updateReply(replyId, {
+      await updateReply({
+        replyId,
         content: editReplyContent,
-      });
-      setReplies(replies.map((r) => (r._id === replyId ? response.data : r)));
+      }).unwrap();
       setEditingReply(null);
       setEditReplyContent("");
     } catch (error) {
       console.error("Error updating reply:", error);
-      alert(error.response?.data?.message || "Failed to update reply");
+      alert(error.data?.message || "Failed to update reply");
     }
   };
 
@@ -107,12 +102,11 @@ function PostCard({
     if (!replyToDelete) return;
 
     try {
-      await coursePostService.deleteReply(replyToDelete);
-      setReplies(replies.filter((r) => r._id !== replyToDelete));
+      await deleteReply(replyToDelete).unwrap();
       setReplyToDelete(null);
     } catch (error) {
       console.error("Error deleting reply:", error);
-      alert(error.response?.data?.message || "Failed to delete reply");
+      alert(error.data?.message || "Failed to delete reply");
     }
   };
 
@@ -120,11 +114,11 @@ function PostCard({
     e.preventDefault();
     e.stopPropagation();
     try {
-      await coursePostService.togglePinPost(post._id);
+      await togglePinPost(post._id).unwrap();
       if (onPostUpdated) onPostUpdated();
     } catch (error) {
       console.error("Error toggling pin:", error);
-      alert(error.response?.data?.message || "Failed to toggle pin");
+      alert(error.data?.message || "Failed to toggle pin");
     }
   };
 

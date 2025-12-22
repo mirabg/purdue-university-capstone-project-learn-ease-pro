@@ -5,8 +5,8 @@ import { selectUser } from "@/store/slices/authSlice";
 import {
   useGetEnrollmentsQuery,
   useDeleteCourseFeedbackMutation,
+  useGetMyCourseFeedbackQuery,
 } from "@/store/apiSlice";
-import { courseService } from "@services/courseService";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
 import AddEditRatingModal from "@components/AddEditRatingModal";
@@ -22,7 +22,6 @@ function StudentDashboard() {
   const [addEditRatingModalOpen, setAddEditRatingModalOpen] = useState(false);
   const [selectedCourseForRating, setSelectedCourseForRating] = useState(null);
   const [existingFeedback, setExistingFeedback] = useState(null);
-  const [userFeedbackMap, setUserFeedbackMap] = useState({});
   const [isMaterialsModalOpen, setIsMaterialsModalOpen] = useState(false);
   const [selectedCourseForMaterials, setSelectedCourseForMaterials] =
     useState(null);
@@ -40,6 +39,24 @@ function StudentDashboard() {
 
   // RTK Query mutation for deleting feedback
   const [deleteCourseFeedback] = useDeleteCourseFeedbackMutation();
+
+  // Get user feedback for each accepted course using RTK Query
+  const acceptedEnrollments = enrolledCourses.filter(
+    (e) => e.status?.toLowerCase() === "accepted"
+  );
+
+  // Create a map of course IDs to their feedback data using RTK Query
+  const userFeedbackMap = {};
+  acceptedEnrollments.forEach((enrollment) => {
+    const courseId = enrollment.course._id;
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data: feedbackData } = useGetMyCourseFeedbackQuery(courseId, {
+      skip: !courseId,
+    });
+    if (feedbackData?.success && feedbackData?.data) {
+      userFeedbackMap[courseId] = feedbackData.data;
+    }
+  });
 
   // Get status badge styling based on enrollment status
   const getStatusBadgeClass = (status) => {
@@ -61,37 +78,6 @@ function StudentDashboard() {
     if (!status) return "";
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
-
-  // Fetch user feedback for accepted courses
-  useEffect(() => {
-    const fetchFeedback = async () => {
-      const feedbackMap = {};
-      const acceptedEnrollments = enrolledCourses.filter(
-        (e) => e.status?.toLowerCase() === "accepted"
-      );
-
-      await Promise.all(
-        acceptedEnrollments.map(async (enrollment) => {
-          try {
-            const response = await courseService.getMyCourseFeedback(
-              enrollment.course._id
-            );
-            if (response.success && response.data) {
-              feedbackMap[enrollment.course._id] = response.data;
-            }
-          } catch (err) {
-            // No feedback for this course, that's okay
-          }
-        })
-      );
-
-      setUserFeedbackMap(feedbackMap);
-    };
-
-    if (enrolledCourses.length > 0) {
-      fetchFeedback();
-    }
-  }, [enrolledCourses]);
 
   const handleViewRatings = (course) => {
     setSelectedCourse(course);
