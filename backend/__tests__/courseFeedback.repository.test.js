@@ -427,9 +427,12 @@ describe("CourseFeedbackRepository", () => {
         .spyOn(CourseFeedback, "aggregate")
         .mockRejectedValueOnce(new Error("Database error"));
 
-      await expect(
-        courseFeedbackRepository.getAverageRating(testCourse._id)
-      ).rejects.toThrow("Database error");
+      const result = await courseFeedbackRepository.getAverageRating(
+        testCourse._id
+      );
+
+      // Should return default values instead of throwing
+      expect(result).toEqual({ averageRating: 0, totalFeedback: 0 });
 
       jest.restoreAllMocks();
     });

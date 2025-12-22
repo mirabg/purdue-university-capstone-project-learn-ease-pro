@@ -126,7 +126,7 @@ describe("Course Controller", () => {
 
       await courseController.getAllCourses(mockReq, mockRes);
 
-      expect(courseService.getAllCourses).toHaveBeenCalledWith(1, 10, "");
+      expect(courseService.getAllCourses).toHaveBeenCalledWith(1, 10, "", null);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -150,7 +150,7 @@ describe("Course Controller", () => {
 
       await courseController.getAllCourses(mockReq, mockRes);
 
-      expect(courseService.getAllCourses).toHaveBeenCalledWith(1, 10, "");
+      expect(courseService.getAllCourses).toHaveBeenCalledWith(1, 10, "", null);
     });
 
     it("should handle search query", async () => {
@@ -166,7 +166,12 @@ describe("Course Controller", () => {
 
       await courseController.getAllCourses(mockReq, mockRes);
 
-      expect(courseService.getAllCourses).toHaveBeenCalledWith(1, 10, "CS101");
+      expect(courseService.getAllCourses).toHaveBeenCalledWith(
+        1,
+        10,
+        "CS101",
+        null
+      );
     });
   });
 

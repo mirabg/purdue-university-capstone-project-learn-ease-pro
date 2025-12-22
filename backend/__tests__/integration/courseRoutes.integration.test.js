@@ -590,6 +590,14 @@ describe("Course Routes Integration Tests", () => {
 
   describe("POST /api/courses/:id/feedback", () => {
     it("should allow student to add feedback", async () => {
+      // First enroll the student
+      const CourseEnrollment = require("../../src/models/CourseEnrollment");
+      await CourseEnrollment.create({
+        course: testCourse._id,
+        student: studentUser._id,
+        status: "accepted",
+      });
+
       const feedbackData = {
         rating: 5,
         comment: "Excellent course!",
@@ -603,36 +611,6 @@ describe("Course Routes Integration Tests", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.rating).toBe(5);
-    });
-
-    it("should allow faculty to add feedback", async () => {
-      const feedbackData = {
-        rating: 4,
-        comment: "Good course",
-      };
-
-      const res = await request(app)
-        .post(`/api/courses/${testCourse._id}/feedback`)
-        .set("Authorization", `Bearer ${facultyToken}`)
-        .send(feedbackData);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-    });
-
-    it("should allow admin to add feedback", async () => {
-      const feedbackData = {
-        rating: 5,
-        comment: "Great!",
-      };
-
-      const res = await request(app)
-        .post(`/api/courses/${testCourse._id}/feedback`)
-        .set("Authorization", `Bearer ${adminToken}`)
-        .send(feedbackData);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
     });
 
     it("should return 400 for missing rating", async () => {
@@ -665,6 +643,14 @@ describe("Course Routes Integration Tests", () => {
     });
 
     it("should update existing feedback for same user/course", async () => {
+      // First enroll the student
+      const CourseEnrollment = require("../../src/models/CourseEnrollment");
+      await CourseEnrollment.create({
+        course: testCourse._id,
+        student: studentUser._id,
+        status: "accepted",
+      });
+
       // Add initial feedback
       await CourseFeedback.create({
         course: testCourse._id,

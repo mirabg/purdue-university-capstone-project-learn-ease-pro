@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/13</span>
+                <span class='fraction'>13/13</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/13</span>
+                <span class='fraction'>13/13</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -87,54 +87,54 @@
 <a name='L22'></a><a href='#L22'>22</a>
 <a name='L23'></a><a href='#L23'>23</a>
 <a name='L24'></a><a href='#L24'>24</a>
-<a name='L25'></a><a href='#L25'>25</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L25'></a><a href='#L25'>25</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const express = <span class="cstat-no" title="statement not covered" >require("express");</span>
-const router = <span class="cstat-no" title="statement not covered" >express.Router();</span>
-const userController = <span class="cstat-no" title="statement not covered" >require("../controllers/userController");</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const express = require("express");
+const router = express.Router();
+const userController = require("../controllers/userController");
 const {
   requireAdmin,
   authorizeAdminOrOwner,
   requireAuth,
-} = <span class="cstat-no" title="statement not covered" >require("../middleware/auth");</span>
+} = require("../middleware/auth");
 &nbsp;
 // User registration and authentication
-<span class="cstat-no" title="statement not covered" >router.post("/register", userController.register);</span>
-<span class="cstat-no" title="statement not covered" >router.post("/login", userController.login);</span>
+router.post("/register", userController.register);
+router.post("/login", userController.login);
 &nbsp;
 // Public endpoint for getting faculty users (needed for course creation)
-<span class="cstat-no" title="statement not covered" >router.get("/faculty", userController.getFacultyUsers);</span>
+router.get("/faculty", userController.getFacultyUsers);
 &nbsp;
 // CRUD operations
-<span class="cstat-no" title="statement not covered" >router.post("/", requireAdmin, userController.createUser); </span>// Admin creates new user
-<span class="cstat-no" title="statement not covered" >router.get("/", requireAdmin, userController.getAllUsers); </span>// Only admin can see all users
-<span class="cstat-no" title="statement not covered" >router.get("/:id", authorizeAdminOrOwner(), userController.getUserById); </span>// Admin or owner
-<span class="cstat-no" title="statement not covered" >router.put("/:id", authorizeAdminOrOwner(), userController.updateUser); </span>// Admin or owner
-<span class="cstat-no" title="statement not covered" >router.delete("/:id", authorizeAdminOrOwner(), userController.deleteUser); </span>// Admin or owner
+router.post("/", requireAdmin, userController.createUser); // Admin creates new user
+router.get("/", requireAdmin, userController.getAllUsers); // Only admin can see all users
+router.get("/:id", authorizeAdminOrOwner(), userController.getUserById); // Admin or owner
+router.put("/:id", authorizeAdminOrOwner(), userController.updateUser); // Admin or owner
+router.delete("/:id", authorizeAdminOrOwner(), userController.deleteUser); // Admin or owner
 &nbsp;
-<span class="cstat-no" title="statement not covered" >module.exports = router;</span>
+module.exports = router;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -142,7 +142,7 @@ const {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-21T20:35:58.705Z
+                at 2025-12-22T22:29:30.234Z
             </div>
         <script src="../prettify.js"></script>
         <script>

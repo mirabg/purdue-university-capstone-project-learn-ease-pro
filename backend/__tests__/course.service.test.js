@@ -91,11 +91,21 @@ describe("CourseService", () => {
       };
 
       courseRepository.findById.mockResolvedValue(mockCourse);
+      courseFeedbackRepository.getAverageRating.mockResolvedValue({
+        averageRating: 4.5,
+        totalFeedback: 10,
+      });
 
       const result = await courseService.getCourseById("123", false);
 
       expect(courseRepository.findById).toHaveBeenCalledWith("123");
-      expect(result).toEqual(mockCourse);
+      expect(result).toEqual({
+        _id: "123",
+        courseCode: "CS101",
+        name: "Introduction to Computer Science",
+        averageRating: 4.5,
+        ratingCount: 10,
+      });
       expect(courseDetailRepository.findByCourse).not.toHaveBeenCalled();
     });
 
@@ -118,6 +128,10 @@ describe("CourseService", () => {
 
       courseRepository.findById.mockResolvedValue(mockCourse);
       courseDetailRepository.findByCourse.mockResolvedValue(mockDetails);
+      courseFeedbackRepository.getAverageRating.mockResolvedValue({
+        averageRating: 4.5,
+        totalFeedback: 10,
+      });
 
       const result = await courseService.getCourseById("123", true);
 
@@ -138,12 +152,38 @@ describe("CourseService", () => {
   describe("getAllCourses", () => {
     it("should get all courses with pagination", async () => {
       const mockCourses = [
-        { _id: "1", courseCode: "CS101", name: "Course 1" },
-        { _id: "2", courseCode: "CS102", name: "Course 2" },
+        {
+          _id: "1",
+          courseCode: "CS101",
+          name: "Course 1",
+          toObject: function () {
+            return {
+              _id: this._id,
+              courseCode: this.courseCode,
+              name: this.name,
+            };
+          },
+        },
+        {
+          _id: "2",
+          courseCode: "CS102",
+          name: "Course 2",
+          toObject: function () {
+            return {
+              _id: this._id,
+              courseCode: this.courseCode,
+              name: this.name,
+            };
+          },
+        },
       ];
 
       courseRepository.findWithPagination.mockResolvedValue(mockCourses);
       courseRepository.count.mockResolvedValue(20);
+      courseFeedbackRepository.getAverageRating.mockResolvedValue({
+        averageRating: 4.5,
+        totalFeedback: 10,
+      });
 
       const result = await courseService.getAllCourses(1, 10);
 
@@ -153,17 +193,40 @@ describe("CourseService", () => {
         10
       );
       expect(courseRepository.count).toHaveBeenCalledWith({});
-      expect(result.courses).toEqual(mockCourses);
+      expect(result.courses[0]).toMatchObject({
+        _id: "1",
+        courseCode: "CS101",
+        name: "Course 1",
+        averageRating: 4.5,
+        ratingCount: 10,
+      });
       expect(result.total).toBe(20);
       expect(result.page).toBe(1);
       expect(result.totalPages).toBe(2);
     });
 
     it("should get courses with search filter", async () => {
-      const mockCourses = [{ _id: "1", courseCode: "CS101", name: "Course 1" }];
+      const mockCourses = [
+        {
+          _id: "1",
+          courseCode: "CS101",
+          name: "Course 1",
+          toObject: function () {
+            return {
+              _id: this._id,
+              courseCode: this.courseCode,
+              name: this.name,
+            };
+          },
+        },
+      ];
 
       courseRepository.findWithPagination.mockResolvedValue(mockCourses);
       courseRepository.count.mockResolvedValue(1);
+      courseFeedbackRepository.getAverageRating.mockResolvedValue({
+        averageRating: 4.5,
+        totalFeedback: 10,
+      });
 
       const result = await courseService.getAllCourses(1, 10, "CS101");
 
@@ -180,7 +243,13 @@ describe("CourseService", () => {
         0,
         10
       );
-      expect(result.courses).toEqual(mockCourses);
+      expect(result.courses[0]).toMatchObject({
+        _id: "1",
+        courseCode: "CS101",
+        name: "Course 1",
+        averageRating: 4.5,
+        ratingCount: 10,
+      });
       expect(result.total).toBe(1);
     });
   });
