@@ -1,0 +1,613 @@
+/**
+ * Phase 2: Core Course Features - Course Enrollment
+ * Tests enrollment, unenrollment, and enrollment status
+ *
+ * STATUS: IMPLEMENTED ✅
+ */
+
+describe("Course Enrollment", () => {
+  beforeEach(() => {
+    cy.clearAppState();
+    cy.loginAsStudent();
+  });
+
+  describe("Enroll in Course", () => {
+    it("should successfully enroll student in a course", () => {
+      // Mock courses API
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Introduction to Programming",
+              description: "Learn the basics of programming",
+              instructor: {
+                firstName: "John",
+                lastName: "Doe",
+              },
+              credits: 3,
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      // Mock enrollments API
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [],
+        },
+      }).as("enrollmentsApi");
+
+      // Mock enrollment creation
+      cy.intercept("POST", "**/api/enrollments", {
+        statusCode: 201,
+        body: {
+          success: true,
+          data: {
+            _id: "enrollment1",
+            course: "course1",
+            student: "2",
+            status: "pending",
+          },
+          message: "Successfully enrolled",
+        },
+      }).as("createEnrollment");
+
+      cy.viewport(1280, 720);
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      // Click enroll button
+      cy.contains("button", "Enroll").first().click();
+
+      // Wait for enrollment API call
+      cy.wait("@createEnrollment").its("request.body").should("deep.include", {
+        course: "course1",
+        student: "2",
+        status: "pending",
+      });
+
+      // Should show success message
+      cy.contains(
+        "Successfully enrolled! Your request is pending approval."
+      ).should("be.visible");
+    });
+
+    it("should show enrollment confirmation message", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Introduction to Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: { success: true, data: [] },
+      }).as("enrollmentsApi");
+
+      cy.intercept("POST", "**/api/enrollments", {
+        statusCode: 201,
+        body: {
+          success: true,
+          data: {
+            _id: "enrollment1",
+            course: "course1",
+            student: "2",
+            status: "pending",
+          },
+        },
+      }).as("createEnrollment");
+
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      cy.contains("button", "Enroll").click();
+      cy.wait("@createEnrollment");
+
+      // Check for success message
+      cy.contains("Successfully enrolled!").should("be.visible");
+    });
+
+    it("should show loading state while enrolling", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: { success: true, data: [] },
+      }).as("enrollmentsApi");
+
+      cy.intercept("POST", "**/api/enrollments", {
+        statusCode: 201,
+        body: { success: true, data: {} },
+        delay: 1000,
+      }).as("createEnrollment");
+
+      cy.viewport(1280, 720);
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      cy.contains("button", "Enroll").click();
+
+      // Should show "Enrolling..." during API call
+      cy.contains("button", "Enrolling...").should("be.visible");
+      cy.get(".animate-spin").should("be.visible");
+    });
+
+    it("should handle enrollment error gracefully", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: { success: true, data: [] },
+      }).as("enrollmentsApi");
+
+      // Mock enrollment failure
+      cy.intercept("POST", "**/api/enrollments", {
+        statusCode: 400,
+        body: {
+          success: false,
+          message: "Already enrolled in this course",
+        },
+      }).as("createEnrollmentError");
+
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      cy.contains("button", "Enroll").click();
+      cy.wait("@createEnrollmentError");
+
+      // Should show error message
+      cy.contains("Already enrolled in this course").should("be.visible");
+    });
+
+    it("should prevent duplicate enrollment by filtering enrolled courses", () => {
+      // Mock courses API
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+            {
+              _id: "course2",
+              courseCode: "CS201",
+              name: "Data Structures",
+              description: "Advanced topics",
+              instructor: { firstName: "Jane", lastName: "Smith" },
+            },
+          ],
+          count: 2,
+        },
+      }).as("coursesApi");
+
+      // Mock enrollments - student already enrolled in course1
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "enrollment1",
+              course: {
+                _id: "course1",
+                courseCode: "CS101",
+                name: "Programming",
+              },
+              student: "2",
+              status: "active",
+            },
+          ],
+        },
+      }).as("enrollmentsApi");
+
+      cy.viewport(1280, 720);
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      // Should only see course2 (CS201) since already enrolled in course1
+      cy.contains("td", "CS201").should("be.visible");
+      cy.contains("td", "CS101").should("not.exist");
+
+      // Only one enroll button should be visible
+      cy.contains("button", "Enroll").should("have.length", 1);
+    });
+  });
+
+  describe("Enrollment Status", () => {
+    it("should filter out enrolled courses from available courses", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+            {
+              _id: "course2",
+              courseCode: "CS201",
+              name: "Data Structures",
+              description: "Advanced topics",
+              instructor: { firstName: "Jane", lastName: "Smith" },
+            },
+          ],
+          count: 2,
+        },
+      }).as("coursesApi");
+
+      // Student enrolled in course1
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "enrollment1",
+              course: {
+                _id: "course1",
+                courseCode: "CS101",
+                name: "Programming",
+              },
+              student: "2",
+              status: "active",
+            },
+          ],
+        },
+      }).as("enrollmentsApi");
+
+      cy.viewport(1280, 720);
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      // Should show only course2
+      cy.contains("td", "CS201").should("be.visible");
+      cy.contains("Displaying 1 of 1 available course").should("be.visible");
+    });
+
+    it("should show appropriate message when all courses are enrolled", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      // Student enrolled in all courses
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "enrollment1",
+              course: {
+                _id: "course1",
+                courseCode: "CS101",
+                name: "Programming",
+              },
+              student: "2",
+              status: "active",
+            },
+          ],
+        },
+      }).as("enrollmentsApi");
+
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      // Should show message about being enrolled in all courses
+      cy.contains("You're enrolled in all available courses!").should(
+        "be.visible"
+      );
+    });
+
+    it("should display enrollment status in student dashboard", () => {
+      // Mock enrollments for dashboard
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "enrollment1",
+              course: {
+                _id: "course1",
+                courseCode: "CS101",
+                name: "Introduction to Programming",
+                instructor: {
+                  firstName: "John",
+                  lastName: "Doe",
+                },
+              },
+              student: "2",
+              status: "active",
+            },
+            {
+              _id: "enrollment2",
+              course: {
+                _id: "course2",
+                courseCode: "CS201",
+                name: "Data Structures",
+                instructor: {
+                  firstName: "Jane",
+                  lastName: "Smith",
+                },
+              },
+              student: "2",
+              status: "pending",
+            },
+          ],
+        },
+      }).as("enrollmentsApi");
+
+      cy.visit("/student/dashboard");
+      cy.wait("@enrollmentsApi");
+
+      // Should show enrolled courses
+      cy.contains("CS101").should("be.visible");
+      cy.contains("Introduction to Programming").should("be.visible");
+      cy.contains("CS201").should("be.visible");
+      cy.contains("Data Structures").should("be.visible");
+    });
+  });
+
+  describe("Enrollment Workflow", () => {
+    it("should complete full enrollment workflow from explore to dashboard", () => {
+      // Mock initial courses
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      // Mock initial empty enrollments
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [],
+        },
+      }).as("initialEnrollments");
+
+      // Mock enrollment creation
+      cy.intercept("POST", "**/api/enrollments", {
+        statusCode: 201,
+        body: {
+          success: true,
+          data: {
+            _id: "enrollment1",
+            course: "course1",
+            student: "2",
+            status: "pending",
+          },
+        },
+      }).as("createEnrollment");
+
+      cy.viewport(1280, 720);
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@initialEnrollments");
+
+      // Enroll in course
+      cy.contains("button", "Enroll").click();
+      cy.wait("@createEnrollment");
+
+      // Verify success message
+      cy.contains("Successfully enrolled!").should("be.visible");
+
+      // Navigate back to dashboard
+      cy.contains("button", "Back to Dashboard").click();
+      cy.url().should("include", "/student/dashboard");
+    });
+
+    it("should disable enroll button while enrollment is in progress", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: { success: true, data: [] },
+      }).as("enrollmentsApi");
+
+      cy.intercept("POST", "**/api/enrollments", {
+        statusCode: 201,
+        body: { success: true, data: {} },
+        delay: 2000,
+      }).as("createEnrollment");
+
+      cy.viewport(1280, 720);
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      // Click enroll
+      cy.contains("button", "Enroll").click();
+
+      // Button should be disabled and show loading state
+      cy.contains("button", "Enrolling...").should("be.disabled");
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should display error when enrollment fails with network error", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: { success: true, data: [] },
+      }).as("enrollmentsApi");
+
+      cy.intercept("POST", "**/api/enrollments", {
+        forceNetworkError: true,
+      }).as("createEnrollmentError");
+
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      cy.contains("button", "Enroll").click();
+
+      // Should show generic error message
+      cy.contains(/Failed to enroll/i).should("be.visible");
+    });
+
+    it("should clear error message after timeout", () => {
+      cy.intercept("GET", "**/api/courses*", {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            {
+              _id: "course1",
+              courseCode: "CS101",
+              name: "Programming",
+              description: "Learn programming",
+              instructor: { firstName: "John", lastName: "Doe" },
+            },
+          ],
+          count: 1,
+        },
+      }).as("coursesApi");
+
+      cy.intercept("GET", "**/api/users/*/enrollments*", {
+        statusCode: 200,
+        body: { success: true, data: [] },
+      }).as("enrollmentsApi");
+
+      cy.intercept("POST", "**/api/enrollments", {
+        statusCode: 400,
+        body: {
+          success: false,
+          message: "Enrollment failed",
+        },
+      }).as("createEnrollmentError");
+
+      cy.visit("/student/explore-courses");
+      cy.wait("@coursesApi");
+      cy.wait("@enrollmentsApi");
+
+      cy.contains("button", "Enroll").click();
+      cy.wait("@createEnrollmentError");
+
+      // Error should be visible
+      cy.contains("Enrollment failed").should("be.visible");
+
+      // Wait for error to disappear (5 seconds timeout in code)
+      cy.contains("Enrollment failed", { timeout: 6000 }).should("not.exist");
+    });
+  });
+});

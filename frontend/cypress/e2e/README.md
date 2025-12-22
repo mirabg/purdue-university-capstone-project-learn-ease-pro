@@ -12,13 +12,15 @@ This directory contains end-to-end tests organized into 5 phases, following an i
 - `phase1/authorization.cy.js` - Role-based routing, route protection
 - `phase1/dashboards.cy.js` - All dashboard types with data loading
 
-## Phase 2: Core Course Features (TO BE IMPLEMENTED)
+## Phase 2: Core Course Features ✅ (COMPLETED)
 
 **Essential course browsing and enrollment functionality**
 
-- `phase2/course-browsing.cy.js` - Browse, search, filter courses
-- `phase2/course-enrollment.cy.js` - Enroll, unenroll, enrollment status
-- `phase2/course-detail.cy.js` - View course details, materials, ratings
+- ✅ `phase2/course-browsing.cy.js` - Browse, search, filter courses (6 tests)
+- ✅ `phase2/course-enrollment.cy.js` - Enroll, unenroll, enrollment status (5 tests)
+- ✅ `phase2/course-detail.cy.js` - View course details, ratings, navigation (10 tests)
+
+**Total: 21 tests passing**
 
 ## Phase 3: Interactive Features (TO BE IMPLEMENTED)
 
@@ -71,14 +73,13 @@ npx cypress run --spec "cypress/e2e/phase1/auth.cy.js"
 | Phase   | Status      | Test Files | Coverage                        |
 | ------- | ----------- | ---------- | ------------------------------- |
 | Phase 1 | ✅ Complete | 3 files    | Auth, Authorization, Dashboards |
-| Phase 2 | 📋 Planned  | 3 files    | Course features                 |
+| Phase 2 | ✅ Complete | 3 files    | Course features                 |
 | Phase 3 | 📋 Planned  | 3 files    | Interactive features            |
 | Phase 4 | 📋 Planned  | 4 files    | Admin/Faculty features          |
 | Phase 5 | 📋 Planned  | 3 files    | Integration tests               |
 
 ## Next Steps
 
-1. **Implement Phase 2** - Core course browsing and enrollment
-2. **Implement Phase 3** - ChatBoard and interactive features
-3. **Implement Phase 4** - Admin and faculty management
-4. **Implement Phase 5** - Edge cases and integration scenarios
+1. **Implement Phase 3** - ChatBoard and interactive features
+2. **Implement Phase 4** - Admin and faculty management
+3. **Implement Phase 5** - Edge cases and integration scenarios

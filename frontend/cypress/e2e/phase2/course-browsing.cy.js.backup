@@ -9,7 +9,7 @@ describe("Course Browsing", () => {
   beforeEach(() => {
     cy.clearAppState();
     cy.loginAsStudent();
-
+    
     // Mock enrollments API - needed for all tests
     cy.intercept("GET", "**/api/enrollments*", {
       statusCode: 200,
@@ -115,8 +115,8 @@ describe("Course Browsing", () => {
       cy.contains("td", "Data Structures").should("be.visible");
       cy.contains("td", "Jane Smith").should("be.visible");
 
-      // Check enroll buttons exist
-      cy.contains("button", "Enroll").should("exist");
+      // Check enroll buttons
+      cy.contains("button", "Enroll").should("have.length.at.least", 2);
     });
 
     it("should handle empty course list", () => {
@@ -181,8 +181,8 @@ describe("Course Browsing", () => {
       cy.visit("/student/explore-courses");
       cy.wait("@coursesApiError");
 
-      // Should show error indicator - the app shows "Error" text in the UI
-      cy.contains("Error").should("be.visible");
+      // Should show error message
+      cy.contains("Failed to load courses").should("be.visible");
     });
   });
 });
