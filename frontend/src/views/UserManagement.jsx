@@ -6,6 +6,7 @@ import { useGetUsersQuery, useDeleteUserMutation } from "@/store/apiSlice";
 import UserModal from "@components/UserModal";
 import ConfirmModal from "@components/ConfirmModal";
 import Icon from "@components/Icon";
+import ErrorAlert from "@components/ErrorAlert";
 
 function UserManagement() {
   const navigate = useNavigate();
@@ -127,24 +128,12 @@ function UserManagement() {
         </div>
 
         {/* Error message */}
-        {deleteError && (
-          <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <Icon name="error" className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{deleteError}</p>
-              </div>
-              <button
-                onClick={() => setDeleteError(null)}
-                className="ml-auto text-red-400 hover:text-red-600"
-              >
-                <Icon name="close" className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        )}
+        <ErrorAlert
+          error={deleteError}
+          onDismiss={() => setDeleteError(null)}
+          defaultMessage="Failed to delete user"
+          className="mb-4"
+        />
 
         {/* Search and Create */}
         <div className="bg-white rounded-lg shadow mb-6">
@@ -177,16 +166,11 @@ function UserManagement() {
         </div>
 
         {/* Error Message */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex">
-              <Icon name="error" className="h-5 w-5 text-red-400" />
-              <p className="ml-3 text-sm text-red-800">
-                {error.data?.message || error.message || "Failed to load users"}
-              </p>
-            </div>
-          </div>
-        )}
+        <ErrorAlert
+          error={error}
+          defaultMessage="Failed to load users"
+          className="mb-6"
+        />
 
         {/* Users Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">

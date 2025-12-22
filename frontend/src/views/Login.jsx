@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "@/store/slices/authSlice";
 import { useLoginMutation } from "@/store/apiSlice";
+import ErrorAlert from "@components/ErrorAlert";
 
 function Login() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ function Login() {
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Check if there's a message from redirect
@@ -30,13 +31,13 @@ function Login() {
       [name]: value,
     }));
     // Clear error when user starts typing
-    if (error) setError("");
+    if (error) setError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setError("");
+    setError(null);
 
     try {
       const response = await login(formData).unwrap();
@@ -44,13 +45,13 @@ function Login() {
       // Dispatch login success to Redux store
       dispatch(
         loginSuccess({
-          user: response.user,
+          user: response.data,
           token: response.token,
         })
       );
 
       // Redirect based on user role
-      const user = response.user;
+      const user = response.data;
       if (user && user.role === "admin") {
         navigate("/admin/dashboard");
       } else if (user && user.role === "faculty") {
@@ -59,13 +60,8 @@ function Login() {
         navigate("/student/dashboard");
       }
     } catch (err) {
-      // Display error message
-      const errorMessage =
-        err.data?.message ||
-        err.data?.error ||
-        err.message ||
-        "Invalid email or password";
-      setError(errorMessage);
+      // Pass the full error object to ErrorAlert for proper handling
+      setError(err);
     }
 
     return false;
@@ -130,22 +126,11 @@ function Login() {
             </div>
 
             {/* Error Message */}
-            {error && (
-              <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <img
-                      src="/icons/close.svg"
-                      alt=""
-                      className="h-5 w-5 text-red-600"
-                    />
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <p className="text-sm font-medium text-red-800">{error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            <ErrorAlert
+              error={error}
+              onDismiss={() => setError(null)}
+              defaultMessage="Invalid email or password"
+            />
 
             {/* Forgot Password */}
 

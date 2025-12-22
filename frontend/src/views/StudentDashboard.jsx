@@ -13,6 +13,7 @@ import AddEditRatingModal from "@components/AddEditRatingModal";
 import CourseMaterialsModal from "@components/CourseMaterialsModal";
 import ConfirmModal from "@components/ConfirmModal";
 import Icon from "@components/Icon";
+import ErrorAlert from "@components/ErrorAlert";
 import { useDispatch } from "react-redux";
 
 function StudentDashboard() {
@@ -509,22 +510,12 @@ function StudentDashboard() {
 
       {/* Delete Error Message */}
       {deleteError && (
-        <div className="fixed bottom-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50 max-w-md">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <Icon name="error" className="h-5 w-5 text-red-400" />
-            </div>
-            <div className="ml-3 flex-1">
-              <p className="text-sm font-medium text-red-800">{deleteError}</p>
-            </div>
-            <button
-              onClick={() => setDeleteError(null)}
-              className="ml-3 flex-shrink-0 text-red-400 hover:text-red-600"
-            >
-              <span className="sr-only">Dismiss</span>
-              <Icon name="close" className="h-5 w-5" />
-            </button>
-          </div>
+        <div className="fixed bottom-4 right-4 max-w-md z-50 shadow-lg">
+          <ErrorAlert
+            error={deleteError}
+            onDismiss={() => setDeleteError(null)}
+            defaultMessage="Failed to delete rating"
+          />
         </div>
       )}
     </div>

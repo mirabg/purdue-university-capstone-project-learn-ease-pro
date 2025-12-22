@@ -10,6 +10,7 @@ import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
 import ConfirmModal from "@components/ConfirmModal";
 import Icon from "@components/Icon";
+import ErrorAlert from "@components/ErrorAlert";
 
 function CourseManagement() {
   const navigate = useNavigate();
@@ -182,30 +183,20 @@ function CourseManagement() {
         </div>
 
         {/* Error message */}
-        {(error || deleteError) && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <Icon name="error" className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm text-red-700">
-                  {deleteError ||
-                    error?.data?.message ||
-                    error?.message ||
-                    "Failed to load courses"}
-                </p>
-              </div>
-              {deleteError && (
-                <button
-                  onClick={() => setDeleteError(null)}
-                  className="ml-auto text-red-400 hover:text-red-600"
-                >
-                  <Icon name="close" className="h-5 w-5" />
-                </button>
-              )}
-            </div>
-          </div>
+        {error && (
+          <ErrorAlert
+            error={error}
+            defaultMessage="Failed to load courses"
+            className="mb-6"
+          />
+        )}
+        {deleteError && (
+          <ErrorAlert
+            error={deleteError}
+            onDismiss={() => setDeleteError(null)}
+            defaultMessage="Failed to delete course"
+            className="mb-6"
+          />
         )}
 
         {/* Courses table */}
@@ -259,7 +250,7 @@ function CourseManagement() {
                           {course.isActive ? "Active" : "Inactive"}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 mb-3 line-clamp-2">
+                      <div className="text-xs text-gray-500 mb-3">
                         {course.description}
                       </div>
                       {/* Rating Display */}
@@ -327,13 +318,13 @@ function CourseManagement() {
                     <tr>
                       <th
                         scope="col"
-                        className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-2 lg:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Course Code
                       </th>
                       <th
                         scope="col"
-                        className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-2 lg:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Name
                       </th>
@@ -366,18 +357,18 @@ function CourseManagement() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {courses.map((course) => (
                       <tr key={course._id} className="hover:bg-gray-50">
-                        <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                        <td className="px-2 lg:px-3 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {course.courseCode}
                           </div>
                         </td>
-                        <td className="px-4 lg:px-6 py-4">
+                        <td className="px-2 lg:px-3 py-4">
                           <div className="text-sm text-gray-900">
                             {course.name}
                           </div>
                         </td>
                         <td className="hidden lg:table-cell px-4 lg:px-6 py-4">
-                          <div className="text-sm text-gray-500 max-w-xs truncate">
+                          <div className="text-sm text-gray-500">
                             {course.description}
                           </div>
                         </td>
@@ -400,7 +391,7 @@ function CourseManagement() {
                           />
                         </td>
                         <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                          <div className="flex flex-row items-center justify-end flex-wrap gap-2">
+                          <div className="flex flex-row items-center justify-end gap-2">
                             <button
                               onClick={() => navigate(`/course/${course._id}`)}
                               className="text-primary-600 hover:text-primary-900"

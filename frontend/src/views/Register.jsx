@@ -86,7 +86,7 @@ function Register() {
       // Dispatch login success to Redux store
       dispatch(
         loginSuccess({
-          user: response.user,
+          user: response.data,
           token: response.token,
         })
       );

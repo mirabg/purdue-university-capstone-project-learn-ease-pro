@@ -10,6 +10,7 @@ import {
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
 import Icon from "@components/Icon";
+import ErrorAlert from "@components/ErrorAlert";
 
 function ExploreCourses() {
   const navigate = useNavigate();
@@ -168,11 +169,11 @@ function ExploreCourses() {
             {successMessage}
           </div>
         )}
-        {enrollError && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-            {enrollError}
-          </div>
-        )}
+        <ErrorAlert
+          error={error || enrollError}
+          defaultMessage="Failed to load courses"
+          className="mb-4"
+        />
 
         {/* Available Courses Section */}
         <div className="bg-white rounded-lg shadow">

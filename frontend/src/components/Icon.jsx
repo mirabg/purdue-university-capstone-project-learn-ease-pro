@@ -222,25 +222,64 @@ function Icon({ name, className = "", ...props }) {
       />
     ),
     "pin-filled": (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"
-      />
+      <>
+        <path
+          d="M12 13V22"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M18 10C18 11.6569 16.6569 13 15 13H9C7.34315 13 6 11.6569 6 10V9C6 7.34315 7.34315 6 9 6H15C16.6569 6 18 7.34315 18 9V10Z"
+          fill="currentColor"
+        />
+        <path
+          d="M16 6V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V6H16Z"
+          fill="currentColor"
+          opacity="0.8"
+        />
+      </>
     ),
     "pin-outline": (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"
-      />
+      <>
+        <path
+          d="M12 13V22"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M18 10C18 11.6569 16.6569 13 15 13H9C7.34315 13 6 11.6569 6 10V9C6 7.34315 7.34315 6 9 6H15C16.6569 6 18 7.34315 18 9V10Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M16 6V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V6H16Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+      </>
     ),
     "pin-small": (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"
-      />
+      <>
+        <path
+          d="M12 13V22"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M18 10C18 11.6569 16.6569 13 15 13H9C7.34315 13 6 11.6569 6 10V9C6 7.34315 7.34315 6 9 6H15C16.6569 6 18 7.34315 18 9V10Z"
+          fill="currentColor"
+        />
+        <path
+          d="M16 6V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V6H16Z"
+          fill="currentColor"
+          opacity="0.8"
+        />
+      </>
     ),
   };
 
