@@ -22,13 +22,20 @@ This directory contains end-to-end tests organized into 5 phases, following an i
 
 **Total: 21 tests passing**
 
-## Phase 3: Interactive Features (TO BE IMPLEMENTED)
+## Phase 3: Interactive Features 🚧 (IN PROGRESS)
 
 **User engagement and content interaction**
 
-- `phase3/chatboard.cy.js` - Posts, replies, editing, deleting
-- `phase3/course-materials.cy.js` - View, download course materials
-- `phase3/course-ratings.cy.js` - Rate courses, view feedback
+- 🚧 `phase3/chatboard.cy.js` - Posts, replies, editing, deleting (10 tests: 2 passing)
+- 🚧 `phase3/course-materials.cy.js` - View, download course materials (11 tests: 1 passing)
+- 🚧 `phase3/course-ratings.cy.js` - Rate courses, view feedback (12 tests: 1 passing)
+
+**Total: 33 tests created (4 passing, 29 need refinement)**
+
+**Known Issues:**
+- Mock data structures need alignment with actual API responses
+- Element selectors need updates for dashboard interactions
+- CourseInstructor data missing in ChatBoard tests
 
 ## Phase 4: Admin/Faculty Features (TO BE IMPLEMENTED)
 
@@ -63,17 +70,17 @@ npx cypress run --spec "cypress/e2e/phase2/**/*.cy.js"
 ```
 
 ### Run specific test file
+   | Test Files | Coverage                        |
+| ------- | -------------- | ---------- | ------------------------------- |
+| Phase 1 | ✅ Complete    | 3 files    | Auth, Authorization, Dashboards |
+| Phase 2 | ✅ Complete    | 3 files    | Course features                 |
+| Phase 3 | 🚧 In Progress | 3 files    | Interactive features            |
+| Phase 4 | 📋 Planned     | 4 files    | Admin/Faculty features          |
+| Phase 5 | 📋 Planned     | 3 files    | Integration tests               |
 
-```bash
-npx cypress run --spec "cypress/e2e/phase1/auth.cy.js"
-```
+## Next Steps
 
-## Test Coverage Status
-
-| Phase   | Status      | Test Files | Coverage                        |
-| ------- | ----------- | ---------- | ------------------------------- |
-| Phase 1 | ✅ Complete | 3 files    | Auth, Authorization, Dashboards |
-| Phase 2 | ✅ Complete | 3 files    | Course features                 |
+1. **Fix Phase 3 Tests** - Address mock data and selector issu           |
 | Phase 3 | 📋 Planned  | 3 files    | Interactive features            |
 | Phase 4 | 📋 Planned  | 4 files    | Admin/Faculty features          |
 | Phase 5 | 📋 Planned  | 3 files    | Integration tests               |
