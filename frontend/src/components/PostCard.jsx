@@ -211,7 +211,7 @@ function PostCard({
                 )}
               </button>
             )}
-            {isOwner && (
+            {(isOwner || isFaculty || isInstructor) && (
               <>
                 <button
                   onClick={(e) => {
@@ -289,13 +289,16 @@ function PostCard({
                       isFaculty ||
                       isInstructor) && (
                       <div className="flex items-center gap-1">
-                        {currentUserId === reply.user._id && (
+                        {(currentUserId === reply.user._id ||
+                          isFaculty ||
+                          isInstructor) && (
                           <button
                             onClick={() => {
                               setEditingReply(reply._id);
                               setEditReplyContent(reply.content);
                             }}
                             className="p-1 text-gray-500 hover:text-primary-600 rounded"
+                            title="Edit reply"
                           >
                             <Icon name="edit" className="w-4 h-4" />
                           </button>
@@ -303,6 +306,7 @@ function PostCard({
                         <button
                           onClick={() => handleDeleteReply(reply._id)}
                           className="p-1 text-gray-500 hover:text-red-600 rounded"
+                          title="Delete reply"
                         >
                           <Icon name="delete" className="w-4 h-4" />
                         </button>
