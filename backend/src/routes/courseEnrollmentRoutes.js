@@ -18,6 +18,15 @@ const requireAdminOrFaculty = (req, res, next) => {
 // Enrollment CRUD operations
 router.post("/", requireAuth, courseEnrollmentController.createEnrollment);
 router.get("/", requireAuth, courseEnrollmentController.getAllEnrollments);
+
+// Get global enrollment statistics (admin only)
+router.get(
+  "/stats",
+  requireAuth,
+  requireAdmin,
+  courseEnrollmentController.getGlobalEnrollmentStats
+);
+
 router.get("/:id", requireAuth, courseEnrollmentController.getEnrollmentById);
 router.put(
   "/:id",

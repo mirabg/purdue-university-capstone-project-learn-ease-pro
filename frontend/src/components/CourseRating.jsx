@@ -37,7 +37,7 @@ function CourseRating({
 
   return (
     <div
-      className={`flex items-center ${sizeConfig.gap} ${
+      className={`flex flex-wrap items-center ${sizeConfig.gap} ${
         isInteractive
           ? "cursor-pointer hover:opacity-75 transition-opacity"
           : ""
@@ -56,7 +56,7 @@ function CourseRating({
           : undefined
       }
     >
-      <div className="flex items-center mr-5">
+      <div className="flex items-center mr-2 flex-shrink-0">
         {/* Full Stars */}
         {[...Array(fullStars)].map((_, i) => (
           <img

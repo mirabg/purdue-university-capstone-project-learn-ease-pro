@@ -328,3 +328,24 @@ exports.getStudentEnrollmentStats = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get global enrollment statistics
+ * @route   GET /api/enrollments/stats
+ * @access  Private (Admin only)
+ */
+exports.getGlobalEnrollmentStats = async (req, res) => {
+  try {
+    const stats = await courseEnrollmentService.getGlobalEnrollmentStats();
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

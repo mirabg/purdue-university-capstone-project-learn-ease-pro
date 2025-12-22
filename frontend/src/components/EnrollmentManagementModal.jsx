@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { enrollmentService } from "@services/enrollmentService";
 import Icon from "@components/Icon";
+import EditEnrollmentModal from "@components/EditEnrollmentModal";
 
 function EnrollmentManagementModal({ isOpen, onClose, course }) {
   const [enrollments, setEnrollments] = useState([]);
@@ -14,11 +15,8 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
     total: 0,
   });
   const [filterStatus, setFilterStatus] = useState("all");
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({
-    status: "",
-    comments: "",
-  });
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && course) {
@@ -37,7 +35,11 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
         statusFilter
       );
       if (response.success) {
-        setEnrollments(response.data);
+        // Filter out enrollments without valid student data
+        const validEnrollments = response.data.filter(
+          (enrollment) => enrollment.student && enrollment.student._id
+        );
+        setEnrollments(validEnrollments);
       }
     } catch (err) {
       console.error("Error fetching enrollments:", err);
@@ -60,38 +62,32 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
     }
   };
 
-  const handleEdit = (enrollment) => {
-    setEditingId(enrollment._id);
-    setEditForm({
-      status: enrollment.status,
-      comments: enrollment.comments || "",
-    });
+  const handleOpenEditModal = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setEditModalOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditForm({
-      status: "",
-      comments: "",
-    });
+  const handleCloseEditModal = () => {
+    setSelectedEnrollment(null);
+    setEditModalOpen(false);
   };
 
-  const handleSaveEdit = async (enrollmentId) => {
+  const handleSaveEnrollment = async (enrollmentId, status, comments) => {
     try {
       setError(null);
       const response = await enrollmentService.updateEnrollmentStatus(
         enrollmentId,
-        editForm.status,
-        editForm.comments
+        status,
+        comments
       );
       if (response.success) {
-        setEditingId(null);
         fetchEnrollments();
         fetchStats();
       }
     } catch (err) {
       console.error("Error updating enrollment:", err);
       setError(err.response?.data?.message || "Failed to update enrollment");
+      throw err;
     }
   };
 
@@ -280,92 +276,48 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
                       <tr key={enrollment._id} className="hover:bg-gray-50">
                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           <div className="text-xs sm:text-sm font-medium text-gray-900">
-                            {enrollment.student?.firstName}{" "}
-                            {enrollment.student?.lastName}
+                            {enrollment.student?.firstName ||
+                            enrollment.student?.lastName
+                              ? `${enrollment.student?.firstName || ""} ${
+                                  enrollment.student?.lastName || ""
+                                }`.trim()
+                              : "Unknown Student"}
                           </div>
                           <div className="md:hidden text-xs text-gray-500 mt-1">
-                            {enrollment.student?.email}
+                            {enrollment.student?.email || "N/A"}
                           </div>
                         </td>
                         <td className="hidden md:table-cell px-3 sm:px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">
-                            {enrollment.student?.email}
+                            {enrollment.student?.email || "N/A"}
                           </div>
                         </td>
                         <td className="hidden lg:table-cell px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                           {formatDate(enrollment.createdAt)}
                         </td>
                         <td className="hidden xl:table-cell px-3 sm:px-6 py-4">
-                          {editingId === enrollment._id ? (
-                            <textarea
-                              value={editForm.comments}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  comments: e.target.value,
-                                })
-                              }
-                              rows="2"
-                              className="w-full text-xs border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                              placeholder="Add comments..."
-                            />
-                          ) : (
-                            <div className="text-sm text-gray-500 max-w-xs truncate">
-                              {enrollment.comments || "-"}
-                            </div>
-                          )}
+                          <div className="text-sm text-gray-500 max-w-xs truncate">
+                            {enrollment.comments || "-"}
+                          </div>
                         </td>
                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                          {editingId === enrollment._id ? (
-                            <select
-                              value={editForm.status}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  status: e.target.value,
-                                })
-                              }
-                              className="text-xs border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="accepted">Accepted</option>
-                              <option value="denied">Denied</option>
-                            </select>
-                          ) : (
-                            <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
-                                enrollment.status
-                              )}`}
-                            >
-                              {enrollment.status.charAt(0).toUpperCase() +
-                                enrollment.status.slice(1)}
-                            </span>
-                          )}
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                              enrollment.status
+                            )}`}
+                          >
+                            {enrollment.status.charAt(0).toUpperCase() +
+                              enrollment.status.slice(1)}
+                          </span>
                         </td>
                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                          {editingId === enrollment._id ? (
-                            <div className="flex justify-end space-x-2">
-                              <button
-                                onClick={() => handleSaveEdit(enrollment._id)}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="text-gray-600 hover:text-gray-900"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handleEdit(enrollment)}
-                              className="text-primary-600 hover:text-primary-900"
-                            >
-                              Change Status
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleOpenEditModal(enrollment)}
+                            className="text-primary-600 hover:text-primary-900 inline-flex items-center"
+                            title="Edit enrollment"
+                          >
+                            <Icon name="edit" className="h-4 w-4" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -387,6 +339,14 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
           </button>
         </div>
       </div>
+
+      {/* Edit Enrollment Modal */}
+      <EditEnrollmentModal
+        isOpen={editModalOpen}
+        onClose={handleCloseEditModal}
+        enrollment={selectedEnrollment}
+        onSave={handleSaveEnrollment}
+      />
     </div>
   );
 }

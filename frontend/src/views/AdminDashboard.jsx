@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { authService } from "@services/authService";
 import { userService } from "@services/userService";
 import { courseService } from "@services/courseService";
+import courseEnrollmentService from "@services/courseEnrollmentService";
 import Icon from "@components/Icon";
 
 function AdminDashboard() {
   const [user, setUser] = useState(null);
   const [totalUsers, setTotalUsers] = useState(null);
   const [totalCourses, setTotalCourses] = useState(null);
+  const [enrollmentStats, setEnrollmentStats] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +29,12 @@ function AdminDashboard() {
         const coursesResponse = await courseService.getAllCourses(1, 1);
         if (coursesResponse.success) {
           setTotalCourses(coursesResponse.count);
+        }
+
+        const enrollmentResponse =
+          await courseEnrollmentService.getGlobalEnrollmentStats();
+        if (enrollmentResponse.success) {
+          setEnrollmentStats(enrollmentResponse.data);
         }
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -94,9 +102,26 @@ function AdminDashboard() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Active Enrollments
+                    Total Enrollments
                   </dt>
-                  <dd className="text-2xl font-semibold text-gray-900">-</dd>
+                  <dd className="text-2xl font-semibold text-gray-900">
+                    {enrollmentStats !== null ? enrollmentStats.total : "-"}
+                  </dd>
+                  {enrollmentStats && (
+                    <dd className="mt-2 text-xs text-gray-600">
+                      <span className="text-yellow-600 font-medium">
+                        Pending: {enrollmentStats.pending}
+                      </span>
+                      {" | "}
+                      <span className="text-green-600 font-medium">
+                        Approved: {enrollmentStats.accepted}
+                      </span>
+                      {" | "}
+                      <span className="text-red-600 font-medium">
+                        Denied: {enrollmentStats.denied}
+                      </span>
+                    </dd>
+                  )}
                 </dl>
               </div>
             </div>

@@ -141,6 +141,15 @@ export const courseEnrollmentService = {
     const response = await api.get(`/enrollments/student/${studentId}/stats`);
     return response.data;
   },
+
+  /**
+   * Get global enrollment statistics (all enrollments)
+   * @returns {Promise} Global enrollment statistics
+   */
+  getGlobalEnrollmentStats: async () => {
+    const response = await api.get(`/enrollments/stats`);
+    return response.data;
+  },
 };
 
 export default courseEnrollmentService;

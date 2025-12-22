@@ -330,6 +330,7 @@ function StudentDashboard() {
                               <img
                                 src="/icons/edit.svg"
                                 alt="Edit"
+                                title="Edit rating"
                                 className="h-4 w-4 text-primary-600 hover:opacity-70 cursor-pointer"
                               />
                               <button
@@ -338,6 +339,7 @@ function StudentDashboard() {
                                   handleDeleteRating(enrollment.course._id);
                                 }}
                                 className="hover:opacity-70"
+                                title="Delete rating"
                               >
                                 <img
                                   src="/icons/delete.svg"

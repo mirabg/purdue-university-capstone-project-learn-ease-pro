@@ -8,6 +8,7 @@ import CourseMaterialsModal from "@components/CourseMaterialsModal";
 import EnrollmentManagementModal from "@components/EnrollmentManagementModal";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
+import ConfirmModal from "@components/ConfirmModal";
 import Icon from "@components/Icon";
 
 function CourseManagement() {
@@ -20,7 +21,8 @@ function CourseManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState(null);
   const [isMaterialsModalOpen, setIsMaterialsModalOpen] = useState(false);
   const [materialsCourse, setMaterialsCourse] = useState(null);
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
@@ -131,15 +133,17 @@ function CourseManagement() {
     setIsEnrollmentModalOpen(true);
   };
 
-  const handleDeleteCourse = async (courseId) => {
-    if (deleteConfirmId !== courseId) {
-      setDeleteConfirmId(courseId);
-      return;
-    }
+  const handleDeleteCourse = (courseId) => {
+    setCourseToDelete(courseId);
+    setConfirmDeleteModalOpen(true);
+  };
+
+  const confirmDeleteCourse = async () => {
+    if (!courseToDelete) return;
 
     try {
-      await courseService.deleteCourse(courseId);
-      setDeleteConfirmId(null);
+      await courseService.deleteCourse(courseToDelete);
+      setCourseToDelete(null);
       fetchCourses(); // Refresh the list
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete course");
@@ -169,9 +173,9 @@ function CourseManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header with back button */}
-        <div className="mb-4 sm:mb-8">
+        <div className="mb-8">
           <button
             onClick={() => navigate(getDashboardUrl())}
             className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-3 sm:mb-4"
@@ -327,46 +331,45 @@ function CourseManagement() {
                             </span>
                           </div>
                         )}
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-row items-center flex-wrap gap-2">
                         <button
                           onClick={() => navigate(`/course/${course._id}`)}
-                          className="text-xs text-primary-600 hover:text-primary-900 font-medium"
+                          className="text-primary-600 hover:text-primary-900"
+                          title="Discussion Board"
                         >
-                          Discussion Board
+                          <Icon name="chat" className="h-4 w-4" />
                         </button>
                         {(isFaculty || isAdmin) && (
                           <button
                             onClick={() => handleManageEnrollments(course)}
-                            className="text-xs text-blue-600 hover:text-blue-900 font-medium"
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Enrollments"
                           >
-                            Enrollments
+                            <Icon name="users" className="h-4 w-4" />
                           </button>
                         )}
                         <button
                           onClick={() => handleManageMaterials(course)}
-                          className="text-xs text-green-600 hover:text-green-900 font-medium"
+                          className="text-green-600 hover:text-green-900"
+                          title="Materials"
                         >
-                          Materials
+                          <Icon name="document" className="h-4 w-4" />
                         </button>
                         {!isFaculty && (
                           <>
                             <button
                               onClick={() => handleEditCourse(course)}
-                              className="text-xs text-primary-600 hover:text-primary-900 font-medium"
+                              className="text-primary-600 hover:text-primary-900"
+                              title="Edit course"
                             >
-                              Edit
+                              <Icon name="edit" className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCourse(course._id)}
-                              className={`text-xs font-medium ${
-                                deleteConfirmId === course._id
-                                  ? "text-red-700 font-bold"
-                                  : "text-red-600 hover:text-red-900"
-                              }`}
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete course"
                             >
-                              {deleteConfirmId === course._id
-                                ? "Confirm?"
-                                : "Delete"}
+                              <Icon name="delete" className="h-4 w-4" />
                             </button>
                           </>
                         )}
@@ -496,46 +499,45 @@ function CourseManagement() {
                           </td>
                         )}
                         <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                          <div className="flex flex-col xl:flex-row xl:justify-end gap-2 xl:gap-0">
+                          <div className="flex flex-row items-center justify-end flex-wrap gap-2">
                             <button
                               onClick={() => navigate(`/course/${course._id}`)}
-                              className="text-primary-600 hover:text-primary-900 xl:mr-4 text-left xl:text-right"
+                              className="text-primary-600 hover:text-primary-900"
+                              title="Discussion Board"
                             >
-                              Discussion Board
+                              <Icon name="chat" className="h-5 w-5" />
                             </button>
                             {(isFaculty || isAdmin) && (
                               <button
                                 onClick={() => handleManageEnrollments(course)}
-                                className="text-blue-600 hover:text-blue-900 xl:mr-4 text-left xl:text-right"
+                                className="text-blue-600 hover:text-blue-900"
+                                title="Enrollments"
                               >
-                                Enrollments
+                                <Icon name="users" className="h-5 w-5" />
                               </button>
                             )}
                             <button
                               onClick={() => handleManageMaterials(course)}
-                              className="text-green-600 hover:text-green-900 xl:mr-4 text-left xl:text-right"
+                              className="text-green-600 hover:text-green-900"
+                              title="Materials"
                             >
-                              Materials
+                              <Icon name="document" className="h-5 w-5" />
                             </button>
                             {!isFaculty && (
                               <>
                                 <button
                                   onClick={() => handleEditCourse(course)}
-                                  className="text-primary-600 hover:text-primary-900 xl:mr-4 text-left xl:text-right"
+                                  className="text-primary-600 hover:text-primary-900"
+                                  title="Edit course"
                                 >
-                                  Edit
+                                  <Icon name="edit" className="h-5 w-5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteCourse(course._id)}
-                                  className={`text-left xl:text-right ${
-                                    deleteConfirmId === course._id
-                                      ? "text-red-700 font-bold"
-                                      : "text-red-600 hover:text-red-900"
-                                  }`}
+                                  className="text-red-600 hover:text-red-900"
+                                  title="Delete course"
                                 >
-                                  {deleteConfirmId === course._id
-                                    ? "Confirm Delete?"
-                                    : "Delete"}
+                                  <Icon name="delete" className="h-5 w-5" />
                                 </button>
                               </>
                             )}
@@ -649,6 +651,18 @@ function CourseManagement() {
         isOpen={ratingsModalOpen}
         onClose={() => setRatingsModalOpen(false)}
         course={selectedCourseForRatings}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmDeleteModalOpen}
+        onClose={() => {
+          setConfirmDeleteModalOpen(false);
+          setCourseToDelete(null);
+        }}
+        onConfirm={confirmDeleteCourse}
+        title="Delete Course"
+        message="Are you sure you want to delete this course? This action cannot be undone and will remove all associated data."
       />
     </div>
   );

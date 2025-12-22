@@ -344,6 +344,33 @@ class CourseEnrollmentService {
       throw error;
     }
   }
+
+  /**
+   * Get global enrollment statistics (all enrollments)
+   */
+  async getGlobalEnrollmentStats() {
+    try {
+      const total = await courseEnrollmentRepository.count({});
+      const pending = await courseEnrollmentRepository.count({
+        status: "pending",
+      });
+      const accepted = await courseEnrollmentRepository.count({
+        status: "accepted",
+      });
+      const denied = await courseEnrollmentRepository.count({
+        status: "denied",
+      });
+
+      return {
+        total,
+        pending,
+        accepted,
+        denied,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = new CourseEnrollmentService();

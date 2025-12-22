@@ -270,8 +270,9 @@ function UserManagement() {
                           <button
                             onClick={() => handleEditUser(user)}
                             className="text-primary-600 hover:text-primary-900 mr-4"
+                            title="Edit user"
                           >
-                            Edit
+                            <Icon name="edit" className="h-5 w-5" />
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user._id)}
@@ -280,10 +281,17 @@ function UserManagement() {
                                 ? "text-red-900 font-bold"
                                 : "text-red-600 hover:text-red-900"
                             }`}
+                            title={
+                              deleteConfirmId === user._id
+                                ? "Confirm deletion"
+                                : "Delete user"
+                            }
                           >
-                            {deleteConfirmId === user._id
-                              ? "Confirm?"
-                              : "Delete"}
+                            {deleteConfirmId === user._id ? (
+                              <span className="text-xs">Confirm?</span>
+                            ) : (
+                              <Icon name="delete" className="h-5 w-5" />
+                            )}
                           </button>
                         </td>
                       </tr>
