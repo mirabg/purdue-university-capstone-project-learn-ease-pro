@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "@/store/slices/authSlice";
+import { useLoginMutation } from "@/store/apiSlice";
 
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const [login, { isLoading }] = useLoginMutation();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Check if there's a message from redirect
@@ -29,40 +33,40 @@ function Login() {
     if (error) setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setError("");
-    setLoading(true);
 
-    authService
-      .login(formData)
-      .then((response) => {
-        // Get user from response or decode token
-        const user = response.user || authService.getCurrentUser();
+    try {
+      const response = await login(formData).unwrap();
 
-        // Redirect based on user role
-        if (user && user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else if (user && user.role === "faculty") {
-          navigate("/faculty/dashboard");
-        } else {
-          navigate("/student/dashboard");
-        }
-      })
-      .catch((err) => {
-        // Display error message
-        const errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          "Invalid email or password";
+      // Dispatch login success to Redux store
+      dispatch(
+        loginSuccess({
+          user: response.user,
+          token: response.token,
+        })
+      );
 
-        setError(errorMessage);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      // Redirect based on user role
+      const user = response.user;
+      if (user && user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (user && user.role === "faculty") {
+        navigate("/faculty/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
+    } catch (err) {
+      // Display error message
+      const errorMessage =
+        err.data?.message ||
+        err.data?.error ||
+        err.message ||
+        "Invalid email or password";
+      setError(errorMessage);
+    }
 
     return false;
   };
@@ -149,10 +153,10 @@ function Login() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {isLoading ? (
                   <div className="flex items-center">
                     <img
                       src="/icons/spinner.svg"

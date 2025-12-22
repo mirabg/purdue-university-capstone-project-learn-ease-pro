@@ -1,13 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectUser,
+  selectIsAuthenticated,
+  logout,
+} from "@/store/slices/authSlice";
 
 function Header() {
   const navigate = useNavigate();
-  const user = authService.getCurrentUser();
-  const isAuthenticated = authService.isAuthenticated();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   const handleLogout = () => {
-    authService.logout();
+    dispatch(logout());
     navigate("/login");
   };
 

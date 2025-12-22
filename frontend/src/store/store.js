@@ -1,15 +1,18 @@
 import { configureStore } from "@reduxjs/toolkit";
-
-// Placeholder reducer until features are added
-const placeholderReducer = (state = {}, action) => {
-  return state;
-};
+import authReducer from "./slices/authSlice";
+import coursesReducer from "./slices/coursesSlice";
+import enrollmentsReducer from "./slices/enrollmentsSlice";
+import { apiSlice } from "./apiSlice";
 
 export const store = configureStore({
   reducer: {
-    placeholder: placeholderReducer,
-    // Additional reducers will be added here as features are developed
+    auth: authReducer,
+    courses: coursesReducer,
+    enrollments: enrollmentsReducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(apiSlice.middleware),
 });
 
 export default store;

@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser, selectIsAuthenticated } from "@/store/slices/authSlice";
 import Header from "@components/Header";
 import Footer from "@components/Footer";
 import Login from "@views/Login";
@@ -14,17 +16,15 @@ import Unauthorized from "@views/Unauthorized";
 import AdminRoute from "@components/AdminRoute";
 import FacultyRoute from "@components/FacultyRoute";
 import PrivateRoute from "@components/PrivateRoute";
-import { authService } from "@services/authService";
 
 // Component to handle root redirect based on auth status
 function RootRedirect() {
-  const isAuthenticated = authService.isAuthenticated();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  const user = authService.getCurrentUser();
 
   if (user?.role === "admin") {
     return <Navigate to="/admin/dashboard" replace />;

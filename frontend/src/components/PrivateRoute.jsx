@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectIsAuthenticated } from "@/store/slices/authSlice";
 
 /**
  * PrivateRoute Component
@@ -8,7 +9,7 @@ import { authService } from "@services/authService";
  */
 function PrivateRoute({ children }) {
   const location = useLocation();
-  const isAuthenticated = authService.isAuthenticated();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   if (!isAuthenticated) {
     // Not logged in, redirect to login page

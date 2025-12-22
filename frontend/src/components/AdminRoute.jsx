@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectIsAuthenticated, selectIsAdmin } from "@/store/slices/authSlice";
 
 /**
  * AdminRoute Component
@@ -9,8 +10,8 @@ import { authService } from "@services/authService";
  */
 function AdminRoute({ children }) {
   const location = useLocation();
-  const isAuthenticated = authService.isAuthenticated();
-  const isAdmin = authService.isAdmin();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isAdmin = useSelector(selectIsAdmin);
 
   if (!isAuthenticated) {
     // Not logged in, redirect to login

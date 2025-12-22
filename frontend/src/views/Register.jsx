@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "@/store/slices/authSlice";
+import { useRegisterMutation } from "@/store/apiSlice";
 
 function Register() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [register, { isLoading }] = useRegisterMutation();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -17,7 +22,6 @@ function Register() {
     zipcode: "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +60,7 @@ function Register() {
     if (error) setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setError("");
@@ -73,30 +77,31 @@ function Register() {
       return;
     }
 
-    setLoading(true);
+    try {
+      // Remove confirmPassword before sending to backend
+      const { confirmPassword, ...registrationData } = formData;
 
-    // Remove confirmPassword before sending to backend
-    const { confirmPassword, ...registrationData } = formData;
+      const response = await register(registrationData).unwrap();
 
-    authService
-      .register(registrationData)
-      .then((response) => {
-        // Redirect to student dashboard after successful registration
-        navigate("/student/dashboard");
-      })
-      .catch((err) => {
-        // Display error message
-        const errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          "Registration failed. Please try again.";
+      // Dispatch login success to Redux store
+      dispatch(
+        loginSuccess({
+          user: response.user,
+          token: response.token,
+        })
+      );
 
-        setError(errorMessage);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      // Redirect to student dashboard after successful registration
+      navigate("/student/dashboard");
+    } catch (err) {
+      // Display error message
+      const errorMessage =
+        err.data?.message ||
+        err.data?.error ||
+        err.message ||
+        "Registration failed. Please try again.";
+      setError(errorMessage);
+    }
 
     return false;
   };
@@ -328,10 +333,10 @@ function Register() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {isLoading ? (
                   <div className="flex items-center">
                     <img
                       src="/icons/spinner.svg"

@@ -1,5 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import {
+  selectIsAuthenticated,
+  selectIsFaculty,
+} from "@/store/slices/authSlice";
 
 /**
  * FacultyRoute Component
@@ -9,8 +13,8 @@ import { authService } from "@services/authService";
  */
 function FacultyRoute({ children }) {
   const location = useLocation();
-  const isAuthenticated = authService.isAuthenticated();
-  const isFaculty = authService.isFaculty();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isFaculty = useSelector(selectIsFaculty);
 
   if (!isAuthenticated) {
     // Not logged in, redirect to login
