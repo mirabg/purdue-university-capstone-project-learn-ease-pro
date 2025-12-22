@@ -238,14 +238,14 @@ export const apiSlice = createApi({
 
     // Course Materials endpoints
     getCourseMaterials: builder.query({
-      query: (courseId) => `/courses/${courseId}/materials`,
+      query: (courseId) => `/courses/${courseId}/details`,
       providesTags: (result, error, courseId) => [
         { type: "Material", id: courseId },
       ],
     }),
     uploadCourseMaterial: builder.mutation({
       query: ({ courseId, formData }) => ({
-        url: `/courses/${courseId}/materials`,
+        url: `/courses/${courseId}/upload`,
         method: "POST",
         body: formData,
       }),
@@ -254,13 +254,11 @@ export const apiSlice = createApi({
       ],
     }),
     deleteCourseMaterial: builder.mutation({
-      query: ({ courseId, materialId }) => ({
-        url: `/courses/${courseId}/materials/${materialId}`,
+      query: (materialId) => ({
+        url: `/courses/materials/${materialId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, { courseId }) => [
-        { type: "Material", id: courseId },
-      ],
+      invalidatesTags: ["Material"],
     }),
 
     // Discussion/Post endpoints

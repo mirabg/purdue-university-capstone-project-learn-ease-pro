@@ -1,71 +1,65 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
-import { coursePostService } from "@services/coursePostService";
+import {
+  useGetPostsQuery,
+  useCreatePostMutation,
+  useUpdatePostMutation,
+  useDeletePostMutation,
+} from "@/store/apiSlice";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import ConfirmModal from "./ConfirmModal";
 import Icon from "@components/Icon";
 
 function ChatBoard({ courseId, courseInstructor }) {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalPosts, setTotalPosts] = useState(0);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
 
-  useEffect(() => {
-    loadPosts();
-  }, [courseId, page]);
+  // RTK Query hooks
+  const {
+    data: postsData,
+    isLoading: loading,
+    error: queryError,
+  } = useGetPostsQuery({ courseId, page, limit: 10 });
 
-  const loadPosts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await coursePostService.getPostsByCourse(
-        courseId,
-        page,
-        10
-      );
-      setPosts(response.data || []);
-      setTotalPages(response.pagination?.pages || 1);
-      setTotalPosts(response.pagination?.total || 0);
-    } catch (err) {
-      console.error("Error loading posts:", err);
-      setError("Failed to load discussion posts");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [createPost] = useCreatePostMutation();
+  const [updatePost] = useUpdatePostMutation();
+  const [deletePost] = useDeletePostMutation();
+
+  const posts = postsData?.data || [];
+  const totalPages = postsData?.pagination?.pages || 1;
+  const totalPosts = postsData?.pagination?.total || 0;
+  const error = queryError ? "Failed to load discussion posts" : null;
 
   const handleCreatePost = async (postData) => {
     try {
-      await coursePostService.createPost({
+      await createPost({
+        courseId,
         ...postData,
-        course: courseId,
-      });
-      await loadPosts();
+      }).unwrap();
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error creating post:", error);
-      alert(error.response?.data?.message || "Failed to create post");
+      alert(error.data?.message || "Failed to create post");
       throw error;
     }
   };
 
   const handleUpdatePost = async (postData) => {
     try {
-      await coursePostService.updatePost(editingPost._id, postData);
-      await loadPosts();
+      await updatePost({
+        courseId,
+        postId: editingPost._id,
+        ...postData,
+      }).unwrap();
       setEditingPost(null);
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error updating post:", error);
-      alert(error.response?.data?.message || "Failed to update post");
+      alert(error.data?.message || "Failed to update post");
       throw error;
     }
   };
@@ -79,12 +73,14 @@ function ChatBoard({ courseId, courseInstructor }) {
     if (!postToDelete) return;
 
     try {
-      await coursePostService.deletePost(postToDelete);
-      await loadPosts();
+      await deletePost({
+        courseId,
+        postId: postToDelete,
+      }).unwrap();
       setPostToDelete(null);
     } catch (error) {
       console.error("Error deleting post:", error);
-      alert(error.response?.data?.message || "Failed to delete post");
+      alert(error.data?.message || "Failed to delete post");
     }
   };
 

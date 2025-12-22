@@ -1,7 +1,8 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { formatDistanceToNow } from "date-fns";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
 import { coursePostService } from "@services/coursePostService";
 import ConfirmModal from "./ConfirmModal";
 import Icon from "@components/Icon";
@@ -24,7 +25,7 @@ function PostCard({
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState(null);
 
-  const currentUser = authService.getCurrentUser();
+  const currentUser = useSelector(selectUser);
   const isFaculty = currentUser?.role === "faculty";
   const isOwner = currentUser?.id === post.user._id;
   const isInstructor = currentUser?.id === courseInstructor?._id;

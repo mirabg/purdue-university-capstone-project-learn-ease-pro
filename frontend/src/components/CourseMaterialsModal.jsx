@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
-import { courseService } from "@services/courseService";
-import api from "@services/api";
+import { useState } from "react";
+import {
+  useGetCourseMaterialsQuery,
+  useUploadCourseMaterialMutation,
+  useDeleteCourseMaterialMutation,
+} from "@/store/apiSlice";
 import Icon from "@components/Icon";
 
 function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
-  const [materials, setMaterials] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     file: null,
     title: "",
@@ -17,26 +17,17 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
   });
   const [showUploadForm, setShowUploadForm] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && course) {
-      fetchMaterials();
-    }
-  }, [isOpen, course]);
+  // RTK Query hooks
+  const { data: materialsData, isLoading: loading } =
+    useGetCourseMaterialsQuery(course?._id, {
+      skip: !isOpen || !course,
+    });
 
-  const fetchMaterials = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get(`/courses/${course._id}/details`);
-      if (response.data.success) {
-        setMaterials(response.data.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch materials");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [uploadCourseMaterial, { isLoading: uploading }] =
+    useUploadCourseMaterialMutation();
+  const [deleteCourseMaterial] = useDeleteCourseMaterialMutation();
+
+  const materials = materialsData?.data || [];
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -66,7 +57,6 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
     }
 
     try {
-      setUploading(true);
       setError(null);
 
       const formData = new FormData();
@@ -76,31 +66,21 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
       formData.append("description", uploadForm.description);
       formData.append("order", uploadForm.order);
 
-      const response = await api.post(
-        `/courses/${course._id}/upload`,
+      await uploadCourseMaterial({
+        courseId: course._id,
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      }).unwrap();
 
-      if (response.data.success) {
-        setShowUploadForm(false);
-        setUploadForm({
-          file: null,
-          title: "",
-          type: "document",
-          description: "",
-          order: 0,
-        });
-        fetchMaterials();
-      }
+      setShowUploadForm(false);
+      setUploadForm({
+        file: null,
+        title: "",
+        type: "document",
+        description: "",
+        order: 0,
+      });
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to upload file");
-    } finally {
-      setUploading(false);
+      setError(err.data?.message || "Failed to upload file");
     }
   };
 
@@ -110,10 +90,9 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
     }
 
     try {
-      await api.delete(`/courses/materials/${materialId}`);
-      fetchMaterials();
+      await deleteCourseMaterial(materialId).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete material");
+      setError(err.data?.message || "Failed to delete material");
     }
   };
 
