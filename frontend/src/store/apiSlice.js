@@ -167,6 +167,34 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["Enrollment"],
     }),
+    getEnrollmentsByCourse: builder.query({
+      query: ({ courseId, status }) => {
+        let url = `/enrollments/course/${courseId}`;
+        if (status) url += `?status=${status}`;
+        return url;
+      },
+      providesTags: (result, error, { courseId }) => [
+        { type: "Enrollment", id: courseId },
+        "Enrollment",
+      ],
+    }),
+    getCourseEnrollmentStats: builder.query({
+      query: (courseId) => `/enrollments/course/${courseId}/stats`,
+      providesTags: (result, error, courseId) => [
+        { type: "Enrollment", id: `${courseId}-stats` },
+      ],
+    }),
+    updateEnrollmentStatus: builder.mutation({
+      query: ({ enrollmentId, status, comments }) => ({
+        url: `/enrollments/${enrollmentId}/status`,
+        method: "PATCH",
+        body: { status, comments },
+      }),
+      invalidatesTags: (result, error, { enrollmentId }) => [
+        "Enrollment",
+        { type: "Enrollment", id: enrollmentId },
+      ],
+    }),
 
     // Course Rating/Feedback endpoints
     getCourseFeedback: builder.query({
@@ -297,6 +325,9 @@ export const {
   useCreateEnrollmentMutation,
   useUpdateEnrollmentMutation,
   useDeleteEnrollmentMutation,
+  useGetEnrollmentsByCourseQuery,
+  useGetCourseEnrollmentStatsQuery,
+  useUpdateEnrollmentStatusMutation,
   // Ratings
   useGetCourseFeedbackQuery,
   useCreateCourseFeedbackMutation,

@@ -1,17 +1,11 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
 import Icon from "@components/Icon";
 
 function FacultyDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Get current user info (already verified by FacultyRoute)
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-  }, []);
+  const user = useSelector(selectUser);
 
   return (
     <div className="min-h-full">

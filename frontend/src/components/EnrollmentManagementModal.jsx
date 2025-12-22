@@ -1,65 +1,50 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { enrollmentService } from "@services/enrollmentService";
+import {
+  useGetEnrollmentsByCourseQuery,
+  useGetCourseEnrollmentStatsQuery,
+  useUpdateEnrollmentStatusMutation,
+} from "@/store/apiSlice";
 import Icon from "@components/Icon";
 import EditEnrollmentModal from "@components/EditEnrollmentModal";
 
 function EnrollmentManagementModal({ isOpen, onClose, course }) {
-  const [enrollments, setEnrollments] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    pending: 0,
-    accepted: 0,
-    denied: 0,
-    total: 0,
-  });
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && course) {
-      fetchEnrollments();
-      fetchStats();
+  // RTK Query hooks
+  const {
+    data: enrollmentsData,
+    isLoading: loading,
+    refetch: refetchEnrollments,
+  } = useGetEnrollmentsByCourseQuery(
+    {
+      courseId: course?._id,
+      status: filterStatus === "all" ? undefined : filterStatus,
+    },
+    {
+      skip: !isOpen || !course,
     }
-  }, [isOpen, course, filterStatus]);
+  );
 
-  const fetchEnrollments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const statusFilter = filterStatus === "all" ? null : filterStatus;
-      const response = await enrollmentService.getEnrollmentsByCourse(
-        course._id,
-        statusFilter
-      );
-      if (response.success) {
-        // Filter out enrollments without valid student data
-        const validEnrollments = response.data.filter(
-          (enrollment) => enrollment.student && enrollment.student._id
-        );
-        setEnrollments(validEnrollments);
-      }
-    } catch (err) {
-      console.error("Error fetching enrollments:", err);
-      setError(err.response?.data?.message || "Failed to fetch enrollments");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: statsData } = useGetCourseEnrollmentStatsQuery(course?._id, {
+    skip: !isOpen || !course,
+  });
 
-  const fetchStats = async () => {
-    try {
-      const response = await enrollmentService.getCourseEnrollmentStats(
-        course._id
-      );
-      if (response.success) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching stats:", err);
-    }
+  const [updateEnrollmentStatus] = useUpdateEnrollmentStatusMutation();
+
+  // Extract enrollments and stats from query results
+  const enrollments =
+    enrollmentsData?.data?.filter(
+      (enrollment) => enrollment.student && enrollment.student._id
+    ) || [];
+  const stats = statsData?.data || {
+    pending: 0,
+    accepted: 0,
+    denied: 0,
+    total: 0,
   };
 
   const handleOpenEditModal = (enrollment) => {
@@ -75,18 +60,15 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
   const handleSaveEnrollment = async (enrollmentId, status, comments) => {
     try {
       setError(null);
-      const response = await enrollmentService.updateEnrollmentStatus(
+      await updateEnrollmentStatus({
         enrollmentId,
         status,
-        comments
-      );
-      if (response.success) {
-        fetchEnrollments();
-        fetchStats();
-      }
+        comments,
+      }).unwrap();
+      // Refetch will happen automatically due to cache invalidation
     } catch (err) {
       console.error("Error updating enrollment:", err);
-      setError(err.response?.data?.message || "Failed to update enrollment");
+      setError(err.data?.message || "Failed to update enrollment");
       throw err;
     }
   };

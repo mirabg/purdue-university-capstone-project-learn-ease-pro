@@ -1,36 +1,30 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import api from "@services/api";
+import { useGetCourseFeedbackQuery } from "@/store/apiSlice";
 import Icon from "@components/Icon";
 
 function CourseRatingsModal({ isOpen, onClose, course }) {
   const [feedback, setFeedback] = useState([]);
   const [statistics, setStatistics] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
+  // RTK Query hook for course feedback
+  const {
+    data: feedbackData,
+    isLoading: loading,
+    error: queryError,
+  } = useGetCourseFeedbackQuery(course?._id, {
+    skip: !isOpen || !course,
+  });
+
+  const error = queryError ? "Failed to load ratings. Please try again." : null;
+
+  // Update local state when data changes
   useEffect(() => {
-    if (isOpen && course) {
-      fetchCourseFeedback();
+    if (feedbackData?.success) {
+      setFeedback(feedbackData.data.feedback || []);
+      setStatistics(feedbackData.data.statistics || null);
     }
-  }, [isOpen, course]);
-
-  const fetchCourseFeedback = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get(`/courses/${course._id}/feedback`);
-      if (response.data.success) {
-        setFeedback(response.data.data.feedback || []);
-        setStatistics(response.data.data.statistics || null);
-      }
-    } catch (err) {
-      console.error("Error fetching course feedback:", err);
-      setError("Failed to load ratings. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [feedbackData]);
 
   const renderStars = (rating) => {
     return (

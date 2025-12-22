@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "@/store/slices/authSlice";
-import { useGetEnrollmentsQuery } from "@/store/apiSlice";
+import {
+  useGetEnrollmentsQuery,
+  useDeleteCourseFeedbackMutation,
+} from "@/store/apiSlice";
 import { courseService } from "@services/courseService";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
@@ -33,7 +36,10 @@ function StudentDashboard() {
     limit: 1000,
   });
 
-  const enrolledCourses = enrollmentsData?.enrollments || [];
+  const enrolledCourses = enrollmentsData?.data || [];
+
+  // RTK Query mutation for deleting feedback
+  const [deleteCourseFeedback] = useDeleteCourseFeedbackMutation();
 
   // Get status badge styling based on enrollment status
   const getStatusBadgeClass = (status) => {
@@ -101,8 +107,33 @@ function StudentDashboard() {
   };
 
   const handleRatingSuccess = () => {
-    // Reload the courses to reflect the updated rating
-    loadData();
+    // Refetch feedback for updated ratings
+    if (enrolledCourses.length > 0) {
+      const fetchFeedback = async () => {
+        const feedbackMap = {};
+        const acceptedEnrollments = enrolledCourses.filter(
+          (e) => e.status?.toLowerCase() === "accepted"
+        );
+
+        await Promise.all(
+          acceptedEnrollments.map(async (enrollment) => {
+            try {
+              const response = await courseService.getMyCourseFeedback(
+                enrollment.course._id
+              );
+              if (response.success && response.data) {
+                feedbackMap[enrollment.course._id] = response.data;
+              }
+            } catch (err) {
+              // No feedback for this course
+            }
+          })
+        );
+
+        setUserFeedbackMap(feedbackMap);
+      };
+      fetchFeedback();
+    }
   };
 
   const handleDeleteRating = (courseId) => {
@@ -118,16 +149,22 @@ function StudentDashboard() {
     if (!feedback) return;
 
     try {
-      await courseService.deleteCourseFeedback(feedback._id);
-      // Reload data to reflect the deletion
-      loadData();
+      await deleteCourseFeedback({
+        courseId: courseToDeleteRating,
+        feedbackId: feedback._id,
+      }).unwrap();
+
+      // Remove from local state
+      const updatedFeedbackMap = { ...userFeedbackMap };
+      delete updatedFeedbackMap[courseToDeleteRating];
+      setUserFeedbackMap(updatedFeedbackMap);
+
       setCourseToDeleteRating(null);
       setDeleteError(null);
     } catch (err) {
       console.error("Error deleting rating:", err);
       setDeleteError(
-        err.response?.data?.message ||
-          "Failed to delete rating. Please try again."
+        err.data?.message || "Failed to delete rating. Please try again."
       );
     }
   };
@@ -141,7 +178,7 @@ function StudentDashboard() {
     return null;
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -360,18 +397,6 @@ function StudentDashboard() {
                         <div className="space-y-2">
                           <button
                             onClick={() => {
-                              console.log(
-                                "Navigating to course:",
-                                enrollment.course._id
-                              );
-                              console.log(
-                                "Is authenticated:",
-                                authService.isAuthenticated()
-                              );
-                              console.log(
-                                "Current user:",
-                                authService.getCurrentUser()
-                              );
                               navigate(`/course/${enrollment.course._id}`);
                             }}
                             className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"

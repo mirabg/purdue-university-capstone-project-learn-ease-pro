@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { courseService } from "@services/courseService";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
+import { useGetCourseByIdQuery } from "@/store/apiSlice";
 import ChatBoard from "@components/ChatBoard";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
@@ -10,47 +11,23 @@ import Icon from "@components/Icon";
 function CourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
 
-  const currentUser = authService.getCurrentUser();
+  const currentUser = useSelector(selectUser);
 
-  useEffect(() => {
-    // Check if user is authenticated
-    if (!authService.isAuthenticated()) {
-      console.error("User is not authenticated");
-      navigate("/login");
-      return;
-    }
+  // RTK Query hook for course details
+  const {
+    data: courseData,
+    isLoading: loading,
+    error: queryError,
+  } = useGetCourseByIdQuery(courseId);
 
-    loadCourse();
-  }, [courseId]);
-
-  const loadCourse = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await courseService.getCourseById(courseId);
-      setCourse(response.data);
-    } catch (err) {
-      console.error("Error loading course:", err);
-      console.error("Error details:", err.response?.data);
-      console.error("Status code:", err.response?.status);
-
-      // Check if it's an authentication error
-      if (err.response?.status === 401) {
-        setError("Authentication failed. Please log in again.");
-      } else {
-        setError(
-          err.response?.data?.message || "Failed to load course details"
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const course = courseData?.data;
+  const error = queryError
+    ? queryError.status === 401
+      ? "Authentication failed. Please log in again."
+      : queryError.data?.message || "Failed to load course details"
+    : null;
 
   const handleBack = () => {
     if (currentUser?.role === "student") {

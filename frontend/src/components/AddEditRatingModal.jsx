@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { courseService } from "@services/courseService";
+import { useCreateCourseFeedbackMutation } from "@/store/apiSlice";
 import Icon from "@components/Icon";
 
 function AddEditRatingModal({
@@ -13,8 +13,11 @@ function AddEditRatingModal({
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // RTK Query mutation for creating/updating feedback
+  const [createCourseFeedback, { isLoading: loading }] =
+    useCreateCourseFeedbackMutation();
 
   useEffect(() => {
     if (isOpen && existingFeedback) {
@@ -36,10 +39,13 @@ function AddEditRatingModal({
     }
 
     try {
-      setLoading(true);
       setError(null);
 
-      await courseService.addOrUpdateFeedback(course._id, rating, comment);
+      await createCourseFeedback({
+        courseId: course._id,
+        rating,
+        comment,
+      }).unwrap();
 
       if (onSuccess) {
         onSuccess();
@@ -49,11 +55,8 @@ function AddEditRatingModal({
     } catch (err) {
       console.error("Error submitting feedback:", err);
       setError(
-        err.response?.data?.message ||
-          "Failed to submit rating. Please try again."
+        err.data?.message || "Failed to submit rating. Please try again."
       );
-    } finally {
-      setLoading(false);
     }
   };
 

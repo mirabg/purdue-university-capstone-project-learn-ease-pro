@@ -1,23 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
 import { userService } from "@services/userService";
 import { courseService } from "@services/courseService";
 import courseEnrollmentService from "@services/courseEnrollmentService";
 import Icon from "@components/Icon";
 
 function AdminDashboard() {
-  const [user, setUser] = useState(null);
+  const user = useSelector(selectUser);
   const [totalUsers, setTotalUsers] = useState(null);
   const [totalCourses, setTotalCourses] = useState(null);
   const [enrollmentStats, setEnrollmentStats] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get current user info (already verified by AdminRoute)
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-
     // Fetch total users and courses count
     const fetchStats = async () => {
       try {
