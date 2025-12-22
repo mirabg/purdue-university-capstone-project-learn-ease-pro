@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { loginSuccess } from "@/store/slices/authSlice";
 import { useLoginMutation } from "@/store/apiSlice";
 import ErrorAlert from "@components/ErrorAlert";
@@ -10,12 +10,26 @@ function Login() {
   const location = useLocation();
   const dispatch = useDispatch();
   const [login, { isLoading }] = useLoginMutation();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Redirect authenticated users to their dashboard
+    if (isAuthenticated && user) {
+      if (user.role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (user.role === "faculty") {
+        navigate("/faculty/dashboard", { replace: true });
+      } else {
+        navigate("/student/dashboard", { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     // Check if there's a message from redirect
