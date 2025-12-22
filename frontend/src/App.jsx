@@ -9,6 +9,7 @@ import StudentDashboard from "@views/StudentDashboard";
 import ExploreCourses from "@views/ExploreCourses";
 import UserManagement from "@views/UserManagement";
 import CourseManagement from "@views/CourseManagement";
+import CourseDetail from "@views/CourseDetail";
 import Unauthorized from "@views/Unauthorized";
 import AdminRoute from "@components/AdminRoute";
 import FacultyRoute from "@components/FacultyRoute";
@@ -57,6 +58,14 @@ function App() {
             element={
               <PrivateRoute>
                 <ExploreCourses />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/course/:courseId"
+            element={
+              <PrivateRoute>
+                <CourseDetail />
               </PrivateRoute>
             }
           />

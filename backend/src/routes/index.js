@@ -3,11 +3,13 @@ const router = express.Router();
 const userRoutes = require("./userRoutes");
 const courseRoutes = require("./courseRoutes");
 const courseEnrollmentRoutes = require("./courseEnrollmentRoutes");
+const coursePostRoutes = require("./coursePostRoutes");
 
 // API routes
 router.use("/users", userRoutes);
 router.use("/courses", courseRoutes);
 router.use("/enrollments", courseEnrollmentRoutes);
+router.use("/posts", coursePostRoutes);
 
 // Health check route
 router.get("/health", (req, res) => {

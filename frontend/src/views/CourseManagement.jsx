@@ -381,6 +381,12 @@ function CourseManagement() {
                           </div>
                         )}
                       <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => navigate(`/course/${course._id}`)}
+                          className="text-xs text-primary-600 hover:text-primary-900 font-medium"
+                        >
+                          Discussion Board
+                        </button>
                         {(isFaculty || isAdmin) && (
                           <button
                             onClick={() => handleManageEnrollments(course)}
@@ -544,6 +550,12 @@ function CourseManagement() {
                         )}
                         <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                           <div className="flex flex-col xl:flex-row xl:justify-end gap-2 xl:gap-0">
+                            <button
+                              onClick={() => navigate(`/course/${course._id}`)}
+                              className="text-primary-600 hover:text-primary-900 xl:mr-4 text-left xl:text-right"
+                            >
+                              Discussion Board
+                            </button>
                             {(isFaculty || isAdmin) && (
                               <button
                                 onClick={() => handleManageEnrollments(course)}
