@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "@services/authService";
-import { enrollmentService } from "@services/enrollmentService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
+import { useGetEnrollmentsQuery } from "@/store/apiSlice";
 import { courseService } from "@services/courseService";
-import api from "@services/api";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
 import AddEditRatingModal from "@components/AddEditRatingModal";
@@ -13,9 +13,7 @@ import Icon from "@components/Icon";
 
 function StudentDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const user = useSelector(selectUser);
   const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [addEditRatingModalOpen, setAddEditRatingModalOpen] = useState(false);
@@ -28,6 +26,14 @@ function StudentDashboard() {
   const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
   const [courseToDeleteRating, setCourseToDeleteRating] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+
+  // RTK Query hook for enrollments
+  const { data: enrollmentsData, isLoading } = useGetEnrollmentsQuery({
+    page: 1,
+    limit: 1000,
+  });
+
+  const enrolledCourses = enrollmentsData?.enrollments || [];
 
   // Get status badge styling based on enrollment status
   const getStatusBadgeClass = (status) => {
@@ -50,43 +56,11 @@ function StudentDashboard() {
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
 
+  // Fetch user feedback for accepted courses
   useEffect(() => {
-    // Get current user info
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-
-    // Verify token is valid by making a lightweight API call
-    // If token is expired (401), this will trigger redirect to login via interceptor
-    // If endpoint doesn't exist (404) or other errors, just log and continue
-    api.get("/users/me").catch((error) => {
-      if (error.response?.status === 401) {
-        // 401 is handled by the interceptor which redirects to login
-        return;
-      }
-      // For other errors (404, 500, etc.), just log - user is still valid
-      console.debug("User validation skipped:", error.message);
-    });
-
-    // Load courses and enrollments
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch user's enrollments (all of them - set high limit)
-      const enrollmentsResponse = await enrollmentService.getAllEnrollments(
-        1,
-        1000
-      );
-      const enrollments = enrollmentsResponse.data || [];
-
-      setEnrolledCourses(enrollments);
-
-      // Fetch user feedback for all accepted courses
+    const fetchFeedback = async () => {
       const feedbackMap = {};
-      const acceptedEnrollments = enrollments.filter(
+      const acceptedEnrollments = enrolledCourses.filter(
         (e) => e.status?.toLowerCase() === "accepted"
       );
 
@@ -106,12 +80,12 @@ function StudentDashboard() {
       );
 
       setUserFeedbackMap(feedbackMap);
-    } catch (err) {
-      console.error("Error loading data:", err);
-    } finally {
-      setLoading(false);
+    };
+
+    if (enrolledCourses.length > 0) {
+      fetchFeedback();
     }
-  };
+  }, [enrolledCourses]);
 
   const handleViewRatings = (course) => {
     setSelectedCourse(course);
