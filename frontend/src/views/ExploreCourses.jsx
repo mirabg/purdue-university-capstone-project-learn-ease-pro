@@ -1,119 +1,65 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "@services/authService";
-import { courseService } from "@services/courseService";
-import { enrollmentService } from "@services/enrollmentService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
+import {
+  useGetCoursesQuery,
+  useGetEnrollmentsQuery,
+  useCreateEnrollmentMutation,
+} from "@/store/apiSlice";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
 import Icon from "@components/Icon";
 
 function ExploreCourses() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [availableCourses, setAvailableCourses] = useState([]);
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const user = useSelector(selectUser);
   const [enrolling, setEnrolling] = useState(null);
-  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
   // Pagination and search states
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCourses, setTotalCourses] = useState(0);
   const coursesPerPage = 10;
 
   // Ratings modal states
   const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    loadData();
-  }, []);
+  // RTK Query hooks
+  const {
+    data: coursesData,
+    isLoading: coursesLoading,
+    error: coursesError,
+  } = useGetCoursesQuery({
+    page: currentPage,
+    limit: coursesPerPage,
+    search: searchQuery,
+  });
 
-  useEffect(() => {
-    if (user) {
-      loadAvailableCourses();
-    }
-  }, [currentPage, searchQuery]);
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } =
+    useGetEnrollmentsQuery({
+      page: 1,
+      limit: 1000,
+    });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const [createEnrollment] = useCreateEnrollmentMutation();
 
-      // Fetch user's enrollments
-      const enrollmentsResponse = await enrollmentService.getAllEnrollments();
-      const enrollments = enrollmentsResponse.data || [];
+  const availableCourses = coursesData?.data || [];
+  const totalPages = coursesData?.totalPages || 1;
+  const totalCourses = coursesData?.count || 0;
+  const enrolledCourses = enrollmentsData?.enrollments || [];
+  const loading = coursesLoading || enrollmentsLoading;
+  const error = coursesError;
 
-      setEnrolledCourses(enrollments);
+  // Filter out already enrolled courses
+  const enrolledCourseIds = enrolledCourses
+    .filter((e) => e.course && e.course._id)
+    .map((e) => e.course._id);
 
-      // Load available courses with pagination
-      await loadAvailableCourses(enrollments);
-    } catch (err) {
-      console.error("Error loading data:", err);
-      setError("Failed to load courses");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadAvailableCourses = async (enrollments = null) => {
-    try {
-      // Use existing enrollments or fetch from state
-      const enrolledCourseIds = (enrollments || enrolledCourses)
-        .filter((e) => e.course && e.course._id)
-        .map((e) => e.course._id);
-
-      let allAvailableCourses = [];
-      let page = 1;
-      const batchSize = 50; // Fetch in batches
-
-      // Keep fetching until we have enough available courses for the current page
-      while (allAvailableCourses.length < currentPage * coursesPerPage) {
-        const coursesResponse = await courseService.getAllCourses(
-          page,
-          batchSize,
-          searchQuery
-        );
-
-        const fetchedCourses = coursesResponse.data || [];
-        if (fetchedCourses.length === 0) break; // No more courses to fetch
-
-        // Filter out enrolled courses
-        const available = fetchedCourses.filter(
-          (course) => !enrolledCourseIds.includes(course._id)
-        );
-
-        allAvailableCourses.push(...available);
-
-        // If we've fetched all courses, break
-        if (fetchedCourses.length < batchSize) break;
-
-        page++;
-      }
-
-      // Calculate start and end indices for the current page
-      const startIndex = (currentPage - 1) * coursesPerPage;
-      const endIndex = startIndex + coursesPerPage;
-      const paginatedCourses = allAvailableCourses.slice(startIndex, endIndex);
-
-      setAvailableCourses(paginatedCourses);
-
-      // Estimate total pages (this is approximate since we don't know total available)
-      const estimatedTotalPages = Math.max(
-        1,
-        Math.ceil(allAvailableCourses.length / coursesPerPage)
-      );
-      setTotalCourses(allAvailableCourses.length);
-      setTotalPages(estimatedTotalPages);
-    } catch (err) {
-      console.error("Error loading available courses:", err);
-    }
-  };
+  const filteredCourses = availableCourses.filter(
+    (course) => !enrolledCourseIds.includes(course._id)
+  );
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -129,33 +75,26 @@ function ExploreCourses() {
   const handleEnroll = async (courseId) => {
     try {
       setEnrolling(courseId);
-      setError(null);
       setSuccessMessage(null);
 
-      const currentUser = authService.getCurrentUser();
-
-      await enrollmentService.createEnrollment({
+      await createEnrollment({
         course: courseId,
-        student: currentUser.id,
+        student: user.id,
         status: "pending",
-      });
+      }).unwrap();
 
       setSuccessMessage(
         "Successfully enrolled! Your request is pending approval."
       );
 
-      // Reload data to update the lists
-      await loadData();
-
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       console.error("Error enrolling:", err);
-      setError(
-        err.response?.data?.message ||
+      alert(
+        err.data?.message ||
           "Failed to enroll in course. You may already be enrolled."
       );
-      setTimeout(() => setError(null), 5000);
     } finally {
       setEnrolling(null);
     }
@@ -293,7 +232,7 @@ function ExploreCourses() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {availableCourses.map((course) => (
+                      {filteredCourses.map((course) => (
                         <tr key={course._id} className="hover:bg-gray-50">
                           <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-primary-600">
                             {course.courseCode}
@@ -353,7 +292,7 @@ function ExploreCourses() {
 
                 {/* Mobile/Tablet Card View - hidden on desktop */}
                 <div className="lg:hidden space-y-4">
-                  {availableCourses.map((course) => (
+                  {filteredCourses.map((course) => (
                     <div
                       key={course._id}
                       className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"

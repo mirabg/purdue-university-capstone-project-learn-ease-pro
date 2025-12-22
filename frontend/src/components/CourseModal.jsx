@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { courseService } from "@services/courseService";
+import {
+  useCreateCourseMutation,
+  useUpdateCourseMutation,
+} from "@/store/apiSlice";
 import { userService } from "@services/userService";
 import Icon from "@components/Icon";
 
@@ -12,10 +15,14 @@ function CourseModal({ isOpen, onClose, course }) {
     isActive: true,
   });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [instructors, setInstructors] = useState([]);
   const [loadingInstructors, setLoadingInstructors] = useState(true);
+
+  // RTK Query mutations
+  const [createCourse, { isLoading: isCreating }] = useCreateCourseMutation();
+  const [updateCourse, { isLoading: isUpdating }] = useUpdateCourseMutation();
+  const loading = isCreating || isUpdating;
 
   // Fetch instructors on component mount
   useEffect(() => {
@@ -111,25 +118,23 @@ function CourseModal({ isOpen, onClose, course }) {
       return;
     }
 
-    setLoading(true);
     setSubmitError(null);
 
     try {
       if (course) {
         // Update existing course
-        await courseService.updateCourse(course._id, {
+        await updateCourse({
+          id: course._id,
           ...formData,
           __v: course.__v,
-        });
+        }).unwrap();
       } else {
         // Create new course
-        await courseService.createCourse(formData);
+        await createCourse(formData).unwrap();
       }
-      onClose(true); // Pass true to indicate refresh needed
+      onClose(); // Close modal - RTK Query handles refresh automatically
     } catch (err) {
-      setSubmitError(err.response?.data?.message || "Failed to save course");
-    } finally {
-      setLoading(false);
+      setSubmitError(err.data?.message || "Failed to save course");
     }
   };
 

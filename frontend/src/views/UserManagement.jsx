@@ -1,58 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { userService } from "@services/userService";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
+import { useGetUsersQuery, useDeleteUserMutation } from "@/store/apiSlice";
 import UserModal from "@components/UserModal";
 import Icon from "@components/Icon";
 
 function UserManagement() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const currentUser = useSelector(selectUser);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalUsers, setTotalUsers] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const itemsPerPage = 10;
 
+  // RTK Query hooks
+  const { data, isLoading, error } = useGetUsersQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchQuery,
+  });
+
+  const [deleteUser] = useDeleteUserMutation();
+
+  const users = data?.data || [];
+  const totalPages = data?.totalPages || 1;
+  const totalUsers = data?.count || 0;
+
   // Get dashboard URL based on user role
   const getDashboardUrl = () => {
-    const user = authService.getCurrentUser();
-    if (user?.role === "admin") {
+    if (currentUser?.role === "admin") {
       return "/admin/dashboard";
-    } else if (user?.role === "faculty") {
+    } else if (currentUser?.role === "faculty") {
       return "/faculty/dashboard";
     }
     return "/student/dashboard";
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, searchQuery]);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await userService.getAllUsers(
-        currentPage,
-        itemsPerPage,
-        searchQuery
-      );
-
-      if (response.success) {
-        setUsers(response.data);
-        setTotalPages(response.totalPages);
-        setTotalUsers(response.count);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch users");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleSearch = (e) => {
@@ -77,20 +61,16 @@ function UserManagement() {
     }
 
     try {
-      await userService.deleteUser(userId);
+      await deleteUser(userId).unwrap();
       setDeleteConfirmId(null);
-      fetchUsers(); // Refresh the list
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete user");
+      alert(err.data?.message || "Failed to delete user");
     }
   };
 
-  const handleModalClose = (shouldRefresh) => {
+  const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
-    if (shouldRefresh) {
-      fetchUsers();
-    }
   };
 
   const handlePageChange = (newPage) => {
@@ -112,8 +92,6 @@ function UserManagement() {
   const getStatusBadgeClass = (isActive) => {
     return isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
   };
-
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -172,14 +150,16 @@ function UserManagement() {
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex">
               <Icon name="error" className="h-5 w-5 text-red-400" />
-              <p className="ml-3 text-sm text-red-800">{error}</p>
+              <p className="ml-3 text-sm text-red-800">
+                {error.data?.message || error.message || "Failed to load users"}
+              </p>
             </div>
           </div>
         )}
 
         {/* Users Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
             </div>

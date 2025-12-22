@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { courseService } from "@services/courseService";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
+import { useGetCoursesQuery, useDeleteCourseMutation } from "@/store/apiSlice";
 import { enrollmentService } from "@services/enrollmentService";
 import CourseModal from "@components/CourseModal";
 import CourseMaterialsModal from "@components/CourseMaterialsModal";
@@ -12,12 +13,12 @@ import ConfirmModal from "@components/ConfirmModal";
 import Icon from "@components/Icon";
 
 function CourseManagement() {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const currentUser = useSelector(selectUser);
+  const isFaculty = currentUser?.role === "faculty";
+  const isAdmin = currentUser?.role === "admin";
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCourses, setTotalCourses] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -32,57 +33,27 @@ function CourseManagement() {
   const [selectedCourseForRatings, setSelectedCourseForRatings] =
     useState(null);
   const itemsPerPage = 10;
-  const navigate = useNavigate();
 
-  // Get current user
-  const currentUser = authService.getCurrentUser();
-  const isFaculty = currentUser?.role === "faculty";
-  const isAdmin = currentUser?.role === "admin";
+  // RTK Query hooks
+  const { data, isLoading, error } = useGetCoursesQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchQuery,
+  });
+  const [deleteCourse] = useDeleteCourseMutation();
+
+  const courses = data?.data || [];
+  const totalPages = data?.totalPages || 1;
+  const totalCourses = data?.count || 0;
 
   // Get dashboard URL based on user role
   const getDashboardUrl = () => {
-    const user = authService.getCurrentUser();
-    if (user?.role === "admin") {
+    if (currentUser?.role === "admin") {
       return "/admin/dashboard";
-    } else if (user?.role === "faculty") {
+    } else if (currentUser?.role === "faculty") {
       return "/faculty/dashboard";
     }
     return "/student/dashboard";
-  };
-
-  useEffect(() => {
-    fetchCourses();
-  }, [currentPage, searchQuery]);
-
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await courseService.getAllCourses(
-        currentPage,
-        itemsPerPage,
-        searchQuery
-      );
-
-      console.log("API Response:", response);
-
-      if (response.success) {
-        setCourses(response.data);
-        setTotalPages(response.totalPages);
-        setTotalCourses(response.count);
-        console.log("Total Courses Updated:", response.count);
-
-        // Fetch enrollment stats for each course
-        if ((isFaculty || isAdmin) && response.data.length > 0) {
-          fetchEnrollmentStats(response.data);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching courses:", err);
-      setError(err.response?.data?.message || "Failed to fetch courses");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const fetchEnrollmentStats = async (coursesData) => {
@@ -142,20 +113,17 @@ function CourseManagement() {
     if (!courseToDelete) return;
 
     try {
-      await courseService.deleteCourse(courseToDelete);
+      await deleteCourse(courseToDelete).unwrap();
       setCourseToDelete(null);
-      fetchCourses(); // Refresh the list
+      setConfirmDeleteModalOpen(false);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete course");
+      alert(err.data?.message || "Failed to delete course");
     }
   };
 
-  const handleModalClose = (shouldRefresh) => {
+  const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedCourse(null);
-    if (shouldRefresh) {
-      fetchCourses();
-    }
   };
 
   const handleViewRatings = (course) => {
@@ -244,7 +212,11 @@ function CourseManagement() {
                 <Icon name="error" className="h-5 w-5 text-red-400" />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-red-700">
+                  {error.data?.message ||
+                    error.message ||
+                    "Failed to load courses"}
+                </p>
               </div>
             </div>
           </div>
@@ -252,7 +224,7 @@ function CourseManagement() {
 
         {/* Courses table */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <div className="p-8 text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
               <p className="mt-2 text-sm text-gray-500">Loading courses...</p>

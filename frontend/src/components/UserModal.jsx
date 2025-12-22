@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { userService } from "@services/userService";
+import { useCreateUserMutation, useUpdateUserMutation } from "@/store/apiSlice";
 import Icon from "@components/Icon";
 
 function UserModal({ user, onClose }) {
@@ -18,11 +18,15 @@ function UserModal({ user, onClose }) {
     role: "student",
     isActive: true,
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
   const isEditMode = !!user;
+
+  // RTK Query mutations
+  const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const loading = isCreating || isUpdating;
 
   useEffect(() => {
     if (user) {
@@ -134,7 +138,6 @@ function UserModal({ user, onClose }) {
       return;
     }
 
-    setLoading(true);
     setError(null);
 
     try {
@@ -160,16 +163,14 @@ function UserModal({ user, onClose }) {
       if (isEditMode) {
         // Include version for optimistic locking
         dataToSend.__v = user.__v;
-        await userService.updateUser(user._id, dataToSend);
+        await updateUser({ id: user._id, ...dataToSend }).unwrap();
       } else {
-        await userService.createUser(dataToSend);
+        await createUser(dataToSend).unwrap();
       }
 
-      onClose(true); // Close and refresh
+      onClose(); // Close modal - RTK Query handles refresh automatically
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to save user");
-    } finally {
-      setLoading(false);
+      setError(err.data?.message || "Failed to save user");
     }
   };
 
@@ -179,7 +180,7 @@ function UserModal({ user, onClose }) {
         {/* Background overlay */}
         <div
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          onClick={() => onClose(false)}
+          onClick={onClose}
         ></div>
 
         {/* Center modal */}
