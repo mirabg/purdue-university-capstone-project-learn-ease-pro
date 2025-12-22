@@ -47,90 +47,71 @@ Cypress.Commands.add("loginViaUI", (email, password) => {
 });
 
 /**
- * Login as admin user (direct state manipulation for testing)
+ * Login as admin user using real backend API
  * @example cy.loginAsAdmin()
  */
 Cypress.Commands.add("loginAsAdmin", () => {
-  const adminToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IlVzZXIifQ.dGVzdA";
-  const adminUser = {
-    id: "1",
-    email: "admin@example.com",
-    role: "admin",
-    firstName: "Admin",
-    lastName: "User",
-  };
-
-  // Mock admin dashboard APIs
-  cy.intercept("GET", "**/api/users/stats", {
-    statusCode: 200,
+  cy.request({
+    method: "POST",
+    url: `${Cypress.env("apiUrl")}/users/login`,
     body: {
-      success: true,
-      data: { totalUsers: 0, totalStudents: 0, totalFaculty: 0 },
+      email: "admin@nowhere.com",
+      password: "changeme",
     },
-  });
-  cy.intercept("GET", "**/api/courses/stats", {
-    statusCode: 200,
-    body: { success: true, data: { totalCourses: 0, totalEnrollments: 0 } },
-  });
+  }).then((response) => {
+    expect(response.status).to.eq(200);
+    const { token, data } = response.body;
 
-  cy.window().then((window) => {
-    window.localStorage.setItem("token", adminToken);
-    window.localStorage.setItem("user", JSON.stringify(adminUser));
+    cy.window().then((window) => {
+      window.localStorage.setItem("token", token);
+      window.localStorage.setItem("user", JSON.stringify(data));
+    });
   });
 });
 
 /**
- * Login as faculty user (direct state manipulation for testing)
+ * Login as faculty user using real backend API
  * @example cy.loginAsFaculty()
  */
 Cypress.Commands.add("loginAsFaculty", () => {
-  const facultyToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJlbWFpbCI6ImZhY3VsdHlAZXhhbXBsZS5jb20iLCJyb2xlIjoiZmFjdWx0eSIsImZpcnN0TmFtZSI6IkZhY3VsdHkiLCJsYXN0TmFtZSI6IlVzZXIifQ.dGVzdA";
-  const facultyUser = {
-    id: "3",
-    email: "faculty@example.com",
-    role: "faculty",
-    firstName: "Faculty",
-    lastName: "User",
-  };
+  cy.request({
+    method: "POST",
+    url: `${Cypress.env("apiUrl")}/users/login`,
+    body: {
+      email: "jane.doe@example.com",
+      password: "password123",
+    },
+  }).then((response) => {
+    expect(response.status).to.eq(200);
+    const { token, data } = response.body;
 
-  // Mock faculty dashboard APIs
-  cy.intercept("GET", "**/api/courses?faculty=*", {
-    statusCode: 200,
-    body: { success: true, data: [] },
-  });
-
-  cy.window().then((window) => {
-    window.localStorage.setItem("token", facultyToken);
-    window.localStorage.setItem("user", JSON.stringify(facultyUser));
+    cy.window().then((window) => {
+      window.localStorage.setItem("token", token);
+      window.localStorage.setItem("user", JSON.stringify(data));
+    });
   });
 });
 
 /**
- * Login as student user (direct state manipulation for testing)
+ * Login as student user using real backend API
  * @example cy.loginAsStudent()
  */
 Cypress.Commands.add("loginAsStudent", () => {
-  const studentToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJlbWFpbCI6InN0dWRlbnRAZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImZpcnN0TmFtZSI6IlN0dWRlbnQiLCJsYXN0TmFtZSI6IlVzZXIifQ.dGVzdA";
-  const studentUser = {
-    id: "2",
-    email: "student@example.com",
-    role: "student",
-    firstName: "Student",
-    lastName: "User",
-  };
+  cy.request({
+    method: "POST",
+    url: `${Cypress.env("apiUrl")}/users/login`,
+    body: {
+      email: "john.smith@example.com",
+      password: "password123",
+    },
+  }).then((response) => {
+    expect(response.status).to.eq(200);
+    const { token, data } = response.body;
 
-  // Mock student dashboard APIs
-  cy.intercept("GET", "**/api/users/*/enrollments*", {
-    statusCode: 200,
-    body: { success: true, data: [] },
-  });
-
-  cy.window().then((window) => {
-    window.localStorage.setItem("token", studentToken);
-    window.localStorage.setItem("user", JSON.stringify(studentUser));
+    cy.window().then((window) => {
+      window.localStorage.setItem("token", token);
+      window.localStorage.setItem("user", JSON.stringify(data));
+    });
   });
 });
 

@@ -35,7 +35,7 @@ describe("Authorization & Role-Based Routing", () => {
       // Register page
       cy.visit("/register");
       cy.url().should("include", "/register");
-      cy.contains("h2", "Create Account").should("be.visible");
+      cy.contains("h2", "Create Student Account").should("be.visible");
     });
   });
 
@@ -63,7 +63,7 @@ describe("Authorization & Role-Based Routing", () => {
     it("should redirect student from faculty dashboard to unauthorized", () => {
       cy.visit("/faculty/dashboard");
       cy.url().should("include", "/unauthorized");
-      cy.contains("Access Denied").should("be.visible");
+      cy.contains("Unauthorized Access").should("be.visible");
     });
 
     it("should redirect student from faculty courses to unauthorized", () => {
@@ -74,7 +74,7 @@ describe("Authorization & Role-Based Routing", () => {
     it("should redirect student from admin dashboard to unauthorized", () => {
       cy.visit("/admin/dashboard");
       cy.url().should("include", "/unauthorized");
-      cy.contains("Access Denied").should("be.visible");
+      cy.contains("Unauthorized Access").should("be.visible");
     });
 
     it("should redirect student from admin users page to unauthorized", () => {
@@ -117,7 +117,7 @@ describe("Authorization & Role-Based Routing", () => {
     it("should redirect faculty from student dashboard to unauthorized", () => {
       cy.visit("/student/dashboard");
       cy.url().should("include", "/unauthorized");
-      cy.contains("Access Denied").should("be.visible");
+      cy.contains("Unauthorized Access").should("be.visible");
     });
 
     it("should redirect faculty from student explore courses to unauthorized", () => {
@@ -128,7 +128,7 @@ describe("Authorization & Role-Based Routing", () => {
     it("should redirect faculty from admin dashboard to unauthorized", () => {
       cy.visit("/admin/dashboard");
       cy.url().should("include", "/unauthorized");
-      cy.contains("Access Denied").should("be.visible");
+      cy.contains("Unauthorized Access").should("be.visible");
     });
 
     it("should redirect faculty from admin users page to unauthorized", () => {
@@ -171,7 +171,7 @@ describe("Authorization & Role-Based Routing", () => {
     it("should redirect admin from student dashboard to unauthorized", () => {
       cy.visit("/student/dashboard");
       cy.url().should("include", "/unauthorized");
-      cy.contains("Access Denied").should("be.visible");
+      cy.contains("Unauthorized Access").should("be.visible");
     });
 
     it("should redirect admin from student explore courses to unauthorized", () => {
@@ -182,7 +182,7 @@ describe("Authorization & Role-Based Routing", () => {
     it("should redirect admin from faculty dashboard to unauthorized", () => {
       cy.visit("/faculty/dashboard");
       cy.url().should("include", "/unauthorized");
-      cy.contains("Access Denied").should("be.visible");
+      cy.contains("Unauthorized Access").should("be.visible");
     });
 
     it("should redirect admin from faculty courses to unauthorized", () => {
@@ -204,7 +204,7 @@ describe("Authorization & Role-Based Routing", () => {
 
     it("should display unauthorized page with proper content", () => {
       cy.url().should("include", "/unauthorized");
-      cy.contains("Access Denied").should("be.visible");
+      cy.contains("Unauthorized Access").should("be.visible");
       cy.contains("You don't have permission").should("be.visible");
     });
 
