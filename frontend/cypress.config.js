@@ -24,6 +24,9 @@ export default defineConfig({
   env: {
     apiUrl: "http://localhost:3000/api",
   },
+  env: {
+    apiUrl: "http://localhost:5001/api",
+  },
   viewportWidth: 1280,
   viewportHeight: 720,
   defaultCommandTimeout: 10000,

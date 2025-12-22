@@ -31,8 +31,9 @@ function PostCard({
 
   const currentUser = useSelector(selectUser);
   const isFaculty = currentUser?.role === "faculty";
-  const isOwner = currentUser?.id === post.user._id;
-  const isInstructor = currentUser?.id === courseInstructor?._id;
+  const currentUserId = currentUser?.id || currentUser?._id;
+  const isOwner = currentUserId === post.user._id;
+  const isInstructor = currentUserId === courseInstructor?._id;
 
   // RTK Query hooks
   const { data: repliesData, isLoading: loadingReplies } = useGetRepliesQuery(
@@ -284,11 +285,11 @@ function PostCard({
                         </span>
                       )}
                     </div>
-                    {(currentUser?.id === reply.user._id ||
+                    {(currentUserId === reply.user._id ||
                       isFaculty ||
                       isInstructor) && (
                       <div className="flex items-center gap-1">
-                        {currentUser?.id === reply.user._id && (
+                        {currentUserId === reply.user._id && (
                           <button
                             onClick={() => {
                               setEditingReply(reply._id);

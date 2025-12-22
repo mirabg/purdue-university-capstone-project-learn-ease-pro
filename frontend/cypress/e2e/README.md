@@ -33,6 +33,7 @@ This directory contains end-to-end tests organized into 5 phases, following an i
 **Total: 33 tests created (4 passing, 29 need refinement)**
 
 **Known Issues:**
+
 - Mock data structures need alignment with actual API responses
 - Element selectors need updates for dashboard interactions
 - CourseInstructor data missing in ChatBoard tests
@@ -70,20 +71,21 @@ npx cypress run --spec "cypress/e2e/phase2/**/*.cy.js"
 ```
 
 ### Run specific test file
-   | Test Files | Coverage                        |
-| ------- | -------------- | ---------- | ------------------------------- |
-| Phase 1 | ✅ Complete    | 3 files    | Auth, Authorization, Dashboards |
-| Phase 2 | ✅ Complete    | 3 files    | Course features                 |
-| Phase 3 | 🚧 In Progress | 3 files    | Interactive features            |
-| Phase 4 | 📋 Planned     | 4 files    | Admin/Faculty features          |
-| Phase 5 | 📋 Planned     | 3 files    | Integration tests               |
+
+| Test Files | Coverage       |
+| ---------- | -------------- | ------- | ------------------------------- |
+| Phase 1    | ✅ Complete    | 3 files | Auth, Authorization, Dashboards |
+| Phase 2    | ✅ Complete    | 3 files | Course features                 |
+| Phase 3    | 🚧 In Progress | 3 files | Interactive features            |
+| Phase 4    | 📋 Planned     | 4 files | Admin/Faculty features          |
+| Phase 5    | 📋 Planned     | 3 files | Integration tests               |
 
 ## Next Steps
 
-1. **Fix Phase 3 Tests** - Address mock data and selector issu           |
-| Phase 3 | 📋 Planned  | 3 files    | Interactive features            |
-| Phase 4 | 📋 Planned  | 4 files    | Admin/Faculty features          |
-| Phase 5 | 📋 Planned  | 3 files    | Integration tests               |
+1. **Fix Phase 3 Tests** - Address mock data and selector issu |
+   | Phase 3 | 📋 Planned | 3 files | Interactive features |
+   | Phase 4 | 📋 Planned | 4 files | Admin/Faculty features |
+   | Phase 5 | 📋 Planned | 3 files | Integration tests |
 
 ## Next Steps
 
