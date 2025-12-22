@@ -30,6 +30,7 @@ function CourseManagement() {
   const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
   const [selectedCourseForRatings, setSelectedCourseForRatings] =
     useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const itemsPerPage = 10;
 
   // RTK Query hooks
@@ -46,6 +47,15 @@ function CourseManagement() {
 
   // Get dashboard URL based on user role
   const getDashboardUrl = () => {
+    if (currentUser?.role === "admin") {
+      return "/admin/dashboard";
+    } else if (currentUser?.role === "faculty") {
+      return "/faculty/dashboard";
+    }
+    return "/student/dashboard";
+  };
+
+  const handleSearch = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1); // Reset to first page on new search
   };
@@ -79,11 +89,12 @@ function CourseManagement() {
     if (!courseToDelete) return;
 
     try {
+      setDeleteError(null);
       await deleteCourse(courseToDelete).unwrap();
       setCourseToDelete(null);
       setConfirmDeleteModalOpen(false);
     } catch (err) {
-      alert(err.data?.message || "Failed to delete course");
+      setDeleteError(err.data?.message || "Failed to delete course");
     }
   };
 
@@ -171,19 +182,28 @@ function CourseManagement() {
         </div>
 
         {/* Error message */}
-        {error && (
+        {(error || deleteError) && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <Icon name="error" className="h-5 w-5 text-red-400" />
               </div>
-              <div className="ml-3">
+              <div className="ml-3 flex-1">
                 <p className="text-sm text-red-700">
-                  {error.data?.message ||
-                    error.message ||
+                  {deleteError ||
+                    error?.data?.message ||
+                    error?.message ||
                     "Failed to load courses"}
                 </p>
               </div>
+              {deleteError && (
+                <button
+                  onClick={() => setDeleteError(null)}
+                  className="ml-auto text-red-400 hover:text-red-600"
+                >
+                  <Icon name="close" className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
         )}

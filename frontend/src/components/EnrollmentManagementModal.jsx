@@ -283,14 +283,23 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
                           </div>
                         </td>
                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
-                              enrollment.status
-                            )}`}
-                          >
-                            {enrollment.status.charAt(0).toUpperCase() +
-                              enrollment.status.slice(1)}
-                          </span>
+                          <div>
+                            <span
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                                enrollment.status
+                              )}`}
+                            >
+                              {enrollment.status.charAt(0).toUpperCase() +
+                                enrollment.status.slice(1)}
+                            </span>
+                            {enrollment.status === "denied" &&
+                              enrollment.comments && (
+                                <div className="mt-2 text-xs text-red-600 max-w-xs">
+                                  <span className="font-medium">Reason: </span>
+                                  {enrollment.comments}
+                                </div>
+                              )}
+                          </div>
                         </td>
                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                           <button

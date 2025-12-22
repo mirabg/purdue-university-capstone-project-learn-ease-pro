@@ -9,7 +9,7 @@ const coursePostRoutes = require("./coursePostRoutes");
 router.use("/users", userRoutes);
 router.use("/courses", courseRoutes);
 router.use("/enrollments", courseEnrollmentRoutes);
-router.use("/posts", coursePostRoutes);
+router.use(coursePostRoutes);
 
 // Health check route
 router.get("/health", (req, res) => {

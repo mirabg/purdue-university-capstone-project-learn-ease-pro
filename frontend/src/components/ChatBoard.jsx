@@ -17,6 +17,7 @@ function ChatBoard({ courseId, courseInstructor }) {
   const [page, setPage] = useState(1);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
+  const [error, setError] = useState(null);
 
   // RTK Query hooks
   const {
@@ -32,10 +33,10 @@ function ChatBoard({ courseId, courseInstructor }) {
   const posts = postsData?.data || [];
   const totalPages = postsData?.pagination?.pages || 1;
   const totalPosts = postsData?.pagination?.total || 0;
-  const error = queryError ? "Failed to load discussion posts" : null;
 
   const handleCreatePost = async (postData) => {
     try {
+      setError(null);
       await createPost({
         courseId,
         ...postData,
@@ -43,13 +44,15 @@ function ChatBoard({ courseId, courseInstructor }) {
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error creating post:", error);
-      alert(error.data?.message || "Failed to create post");
+      setError(error.data?.message || "Failed to create post");
+      setTimeout(() => setError(null), 5000);
       throw error;
     }
   };
 
   const handleUpdatePost = async (postData) => {
     try {
+      setError(null);
       await updatePost({
         courseId,
         postId: editingPost._id,
@@ -59,7 +62,8 @@ function ChatBoard({ courseId, courseInstructor }) {
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error updating post:", error);
-      alert(error.data?.message || "Failed to update post");
+      setError(error.data?.message || "Failed to update post");
+      setTimeout(() => setError(null), 5000);
       throw error;
     }
   };
@@ -73,6 +77,7 @@ function ChatBoard({ courseId, courseInstructor }) {
     if (!postToDelete) return;
 
     try {
+      setError(null);
       await deletePost({
         courseId,
         postId: postToDelete,
@@ -80,7 +85,8 @@ function ChatBoard({ courseId, courseInstructor }) {
       setPostToDelete(null);
     } catch (error) {
       console.error("Error deleting post:", error);
-      alert(error.data?.message || "Failed to delete post");
+      setError(error.data?.message || "Failed to delete post");
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -105,6 +111,33 @@ function ChatBoard({ courseId, courseInstructor }) {
 
   return (
     <div className="space-y-4">
+      {/* Error message */}
+      {(error || queryError) && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex items-start">
+            <Icon
+              name="error"
+              className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5"
+            />
+            <div className="ml-3 flex-1">
+              <p className="text-sm text-red-700">
+                {error ||
+                  queryError?.data?.message ||
+                  "Failed to load discussion posts"}
+              </p>
+            </div>
+            {error && (
+              <button
+                onClick={() => setError(null)}
+                className="ml-auto text-red-400 hover:text-red-600"
+              >
+                <Icon name="close" className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header with Create Post Button */}
       <div className="flex items-center justify-between">
         <div>
@@ -164,9 +197,7 @@ function ChatBoard({ courseId, courseInstructor }) {
               key={post._id}
               post={post}
               onEdit={handleEditClick}
-              onPostUpdated={loadPosts}
               onDelete={handleDeletePost}
-              onReply={loadPosts}
               courseInstructor={courseInstructor}
             />
           ))}

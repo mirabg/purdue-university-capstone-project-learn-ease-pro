@@ -68,7 +68,8 @@ exports.getAllCourses = async (req, res) => {
       data: result.courses,
     });
   } catch (error) {
-    res.status(400).json({
+    console.error("Error in getAllCourses:", error);
+    res.status(500).json({
       success: false,
       message: error.message,
     });

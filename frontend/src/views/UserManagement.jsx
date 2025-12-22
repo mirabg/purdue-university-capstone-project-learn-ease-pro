@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { selectUser } from "@/store/slices/authSlice";
 import { useGetUsersQuery, useDeleteUserMutation } from "@/store/apiSlice";
 import UserModal from "@components/UserModal";
+import ConfirmModal from "@components/ConfirmModal";
 import Icon from "@components/Icon";
 
 function UserManagement() {
@@ -13,7 +14,9 @@ function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const itemsPerPage = 10;
 
   // RTK Query hooks
@@ -54,18 +57,26 @@ function UserManagement() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (deleteConfirmId !== userId) {
-      setDeleteConfirmId(userId);
-      return;
-    }
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
 
     try {
-      await deleteUser(userId).unwrap();
-      setDeleteConfirmId(null);
+      setDeleteError(null);
+      await deleteUser(userToDelete._id).unwrap();
+      setUserToDelete(null);
     } catch (err) {
-      alert(err.data?.message || "Failed to delete user");
+      setDeleteError(err.data?.message || "Failed to delete user");
     }
+  };
+
+  const handleConfirmModalClose = () => {
+    setIsConfirmModalOpen(false);
+    setUserToDelete(null);
   };
 
   const handleModalClose = () => {
@@ -108,12 +119,32 @@ function UserManagement() {
         </div>
 
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="mt-2 text-sm text-gray-600">
             Manage user accounts and permissions
           </p>
         </div>
+
+        {/* Error message */}
+        {deleteError && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Icon name="error" className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{deleteError}</p>
+              </div>
+              <button
+                onClick={() => setDeleteError(null)}
+                className="ml-auto text-red-400 hover:text-red-600"
+              >
+                <Icon name="close" className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Search and Create */}
         <div className="bg-white rounded-lg shadow mb-6">
@@ -255,23 +286,11 @@ function UserManagement() {
                             <Icon name="edit" className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteUser(user._id)}
-                            className={`${
-                              deleteConfirmId === user._id
-                                ? "text-red-900 font-bold"
-                                : "text-red-600 hover:text-red-900"
-                            }`}
-                            title={
-                              deleteConfirmId === user._id
-                                ? "Confirm deletion"
-                                : "Delete user"
-                            }
+                            onClick={() => handleDeleteClick(user)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete user"
                           >
-                            {deleteConfirmId === user._id ? (
-                              <span className="text-xs">Confirm?</span>
-                            ) : (
-                              <Icon name="delete" className="h-5 w-5" />
-                            )}
+                            <Icon name="delete" className="h-5 w-5" />
                           </button>
                         </td>
                       </tr>
@@ -384,6 +403,15 @@ function UserManagement() {
       {isModalOpen && (
         <UserModal user={selectedUser} onClose={handleModalClose} />
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={handleConfirmModalClose}
+        onConfirm={handleDeleteUser}
+        title="Delete User"
+        message={`Are you sure you want to delete ${userToDelete?.firstName} ${userToDelete?.lastName}? This action cannot be undone.`}
+      />
     </div>
   );
 }

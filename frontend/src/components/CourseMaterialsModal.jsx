@@ -2,9 +2,11 @@ import { useState } from "react";
 import {
   useGetCourseMaterialsQuery,
   useUploadCourseMaterialMutation,
+  useUpdateCourseMaterialMutation,
   useDeleteCourseMaterialMutation,
 } from "@/store/apiSlice";
 import Icon from "@components/Icon";
+import ConfirmModal from "@components/ConfirmModal";
 
 function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
   const [error, setError] = useState(null);
@@ -16,6 +18,9 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
     order: 0,
   });
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [editingMaterial, setEditingMaterial] = useState(null);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState(null);
 
   // RTK Query hooks
   const { data: materialsData, isLoading: loading } =
@@ -25,6 +30,8 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
 
   const [uploadCourseMaterial, { isLoading: uploading }] =
     useUploadCourseMaterialMutation();
+  const [updateCourseMaterial, { isLoading: updating }] =
+    useUpdateCourseMaterialMutation();
   const [deleteCourseMaterial] = useDeleteCourseMaterialMutation();
 
   const materials = materialsData?.data || [];
@@ -51,7 +58,7 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
   const handleUpload = async (e) => {
     e.preventDefault();
 
-    if (!uploadForm.file) {
+    if (!uploadForm.file && !editingMaterial) {
       setError("Please select a file to upload");
       return;
     }
@@ -60,18 +67,30 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
       setError(null);
 
       const formData = new FormData();
-      formData.append("file", uploadForm.file);
+      if (uploadForm.file) {
+        formData.append("file", uploadForm.file);
+      }
       formData.append("title", uploadForm.title);
       formData.append("type", uploadForm.type);
       formData.append("description", uploadForm.description);
       formData.append("order", uploadForm.order);
 
-      await uploadCourseMaterial({
-        courseId: course._id,
-        formData,
-      }).unwrap();
+      if (editingMaterial) {
+        // Update existing material
+        await updateCourseMaterial({
+          materialId: editingMaterial._id,
+          formData,
+        }).unwrap();
+      } else {
+        // Upload new material
+        await uploadCourseMaterial({
+          courseId: course._id,
+          formData,
+        }).unwrap();
+      }
 
       setShowUploadForm(false);
+      setEditingMaterial(null);
       setUploadForm({
         file: null,
         title: "",
@@ -80,17 +99,47 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
         order: 0,
       });
     } catch (err) {
-      setError(err.data?.message || "Failed to upload file");
+      setError(err.data?.message || "Failed to save material");
     }
   };
 
-  const handleDelete = async (materialId) => {
-    if (!window.confirm("Are you sure you want to delete this material?")) {
-      return;
-    }
+  const handleEdit = (material) => {
+    setEditingMaterial(material);
+    setUploadForm({
+      file: null,
+      title: material.title,
+      type: material.type,
+      description: material.description || "",
+      order: material.order || 0,
+    });
+    setShowUploadForm(true);
+    setError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMaterial(null);
+    setShowUploadForm(false);
+    setUploadForm({
+      file: null,
+      title: "",
+      type: "document",
+      description: "",
+      order: 0,
+    });
+    setError(null);
+  };
+
+  const handleDelete = (materialId) => {
+    setMaterialToDelete(materialId);
+    setConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!materialToDelete) return;
 
     try {
-      await deleteCourseMaterial(materialId).unwrap();
+      await deleteCourseMaterial(materialToDelete).unwrap();
+      setMaterialToDelete(null);
     } catch (err) {
       setError(err.data?.message || "Failed to delete material");
     }
@@ -144,13 +193,16 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
             (showUploadForm ? (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">
-                  Upload New Material
+                  {editingMaterial ? "Edit Material" : "Upload New Material"}
                 </h4>
                 <form onSubmit={handleUpload}>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        File <span className="text-red-500">*</span>
+                        File{" "}
+                        {!editingMaterial && (
+                          <span className="text-red-500">*</span>
+                        )}
                       </label>
                       <input
                         type="file"
@@ -159,8 +211,9 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
                         accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.mp4,.mov,.avi,.jpg,.jpeg,.png,.gif,.zip,.rar"
                       />
                       <p className="mt-1 text-xs text-gray-500">
-                        Max file size: 100MB. Supported formats: PDF, Word,
-                        PowerPoint, Excel, Videos, Images, ZIP
+                        {editingMaterial
+                          ? "Leave empty to keep the existing file. Upload a new file to replace it."
+                          : "Max file size: 100MB. Supported formats: PDF, Word, PowerPoint, Excel, Videos, Images, ZIP"}
                       </p>
                     </div>
 
@@ -225,18 +278,28 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
                     <div className="flex justify-end space-x-3">
                       <button
                         type="button"
-                        onClick={() => setShowUploadForm(false)}
+                        onClick={handleCancelEdit}
                         className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        disabled={uploading}
+                        disabled={uploading || updating}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        disabled={uploading || !uploadForm.file}
+                        disabled={
+                          uploading ||
+                          updating ||
+                          (!editingMaterial && !uploadForm.file)
+                        }
                         className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {uploading ? "Uploading..." : "Upload"}
+                        {uploading || updating
+                          ? editingMaterial
+                            ? "Updating..."
+                            : "Uploading..."
+                          : editingMaterial
+                          ? "Update"
+                          : "Upload"}
                       </button>
                     </div>
                   </div>
@@ -311,12 +374,22 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
                       </div>
                     </div>
                     {!readOnly && (
-                      <button
-                        onClick={() => handleDelete(material._id)}
-                        className="ml-4 text-red-600 hover:text-red-900"
-                      >
-                        <Icon name="delete" className="h-5 w-5" />
-                      </button>
+                      <div className="ml-4 flex items-center space-x-2">
+                        <button
+                          onClick={() => handleEdit(material)}
+                          className="text-primary-600 hover:text-primary-900"
+                          title="Edit material"
+                        >
+                          <Icon name="edit" className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(material._id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete material"
+                        >
+                          <Icon name="delete" className="h-5 w-5" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -335,6 +408,18 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
           </button>
         </div>
       </div>
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => {
+          setConfirmModalOpen(false);
+          setMaterialToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Course Material"
+        message="Are you sure you want to delete this material? This action cannot be undone."
+      />
     </div>
   );
 }

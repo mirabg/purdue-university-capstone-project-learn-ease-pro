@@ -16,6 +16,7 @@ function ExploreCourses() {
   const user = useSelector(selectUser);
   const [enrolling, setEnrolling] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [enrollError, setEnrollError] = useState(null);
 
   // Pagination and search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,14 +27,14 @@ function ExploreCourses() {
   const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  // RTK Query hooks
+  // RTK Query hooks - fetch all courses for client-side filtering
   const {
     data: coursesData,
     isLoading: coursesLoading,
     error: coursesError,
   } = useGetCoursesQuery({
-    page: currentPage,
-    limit: coursesPerPage,
+    page: 1,
+    limit: 1000,
     search: searchQuery,
   });
 
@@ -46,9 +47,8 @@ function ExploreCourses() {
   const [createEnrollment] = useCreateEnrollmentMutation();
 
   const availableCourses = coursesData?.data || [];
-  const totalPages = coursesData?.totalPages || 1;
   const totalCourses = coursesData?.count || 0;
-  const enrolledCourses = enrollmentsData?.enrollments || [];
+  const enrolledCourses = enrollmentsData?.data || [];
   const loading = coursesLoading || enrollmentsLoading;
   const error = coursesError;
 
@@ -57,9 +57,15 @@ function ExploreCourses() {
     .filter((e) => e.course && e.course._id)
     .map((e) => e.course._id);
 
-  const filteredCourses = availableCourses.filter(
+  const allFilteredCourses = availableCourses.filter(
     (course) => !enrolledCourseIds.includes(course._id)
   );
+
+  // Client-side pagination
+  const totalPages = Math.ceil(allFilteredCourses.length / coursesPerPage);
+  const startIndex = (currentPage - 1) * coursesPerPage;
+  const endIndex = startIndex + coursesPerPage;
+  const filteredCourses = allFilteredCourses.slice(startIndex, endIndex);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -91,10 +97,12 @@ function ExploreCourses() {
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       console.error("Error enrolling:", err);
-      alert(
+      setEnrollError(
         err.data?.message ||
           "Failed to enroll in course. You may already be enrolled."
       );
+      // Clear error after 5 seconds
+      setTimeout(() => setEnrollError(null), 5000);
     } finally {
       setEnrolling(null);
     }
@@ -141,12 +149,6 @@ function ExploreCourses() {
                 </h1>
                 <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
                   Browse and enroll in available courses
-                  {totalCourses > 0 && (
-                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                      {totalCourses} {totalCourses === 1 ? "course" : "courses"}{" "}
-                      available
-                    </span>
-                  )}
                 </p>
               </div>
             </div>
@@ -166,9 +168,9 @@ function ExploreCourses() {
             {successMessage}
           </div>
         )}
-        {error && (
+        {enrollError && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-            {error}
+            {enrollError}
           </div>
         )}
 
@@ -176,9 +178,18 @@ function ExploreCourses() {
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-5 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                Available Courses
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-medium text-gray-900">
+                  Available Courses
+                </h2>
+                {allFilteredCourses.length > 0 && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                    Displaying {filteredCourses.length} of{" "}
+                    {allFilteredCourses.length} available{" "}
+                    {allFilteredCourses.length === 1 ? "course" : "courses"}
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Icon name="search" className="h-5 w-5 text-gray-400" />
@@ -194,14 +205,16 @@ function ExploreCourses() {
             </div>
           </div>
           <div className="p-6">
-            {availableCourses.length === 0 ? (
+            {filteredCourses.length === 0 ? (
               <div className="text-center py-12">
                 <Icon
                   name="file-document"
                   className="mx-auto h-12 w-12 text-gray-400"
                 />
                 <p className="mt-2 text-sm text-gray-500">
-                  You're enrolled in all available courses!
+                  {availableCourses.length === 0
+                    ? "No courses available at this time"
+                    : "You're enrolled in all available courses!"}
                 </p>
               </div>
             ) : (
@@ -364,7 +377,7 @@ function ExploreCourses() {
             )}
 
             {/* Pagination Controls */}
-            {availableCourses.length > 0 && totalPages > 1 && (
+            {allFilteredCourses.length > 0 && totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
                 <div className="flex-1 flex justify-between sm:hidden">
                   <button
@@ -385,9 +398,16 @@ function ExploreCourses() {
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm text-gray-700">
-                      Showing page{" "}
-                      <span className="font-medium">{currentPage}</span> of{" "}
-                      <span className="font-medium">{totalPages}</span>
+                      Showing{" "}
+                      <span className="font-medium">{startIndex + 1}</span> to{" "}
+                      <span className="font-medium">
+                        {Math.min(endIndex, allFilteredCourses.length)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-medium">
+                        {allFilteredCourses.length}
+                      </span>{" "}
+                      courses
                     </p>
                   </div>
                   <div>

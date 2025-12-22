@@ -79,8 +79,26 @@ class CourseFeedbackRepository {
   async getAverageRating(courseId) {
     try {
       const mongoose = require("mongoose");
+
+      // Handle case where courseId might be null or invalid
+      if (!courseId) {
+        return { averageRating: 0, totalFeedback: 0 };
+      }
+
+      // Convert to ObjectId if it's a string
+      let objectId;
+      try {
+        objectId =
+          typeof courseId === "string"
+            ? new mongoose.Types.ObjectId(courseId)
+            : courseId;
+      } catch (err) {
+        console.error("Invalid courseId for rating:", courseId, err);
+        return { averageRating: 0, totalFeedback: 0 };
+      }
+
       const result = await CourseFeedback.aggregate([
-        { $match: { course: new mongoose.Types.ObjectId(courseId) } },
+        { $match: { course: objectId } },
         {
           $group: {
             _id: "$course",
@@ -91,7 +109,9 @@ class CourseFeedbackRepository {
       ]);
       return result[0] || { averageRating: 0, totalFeedback: 0 };
     } catch (error) {
-      throw error;
+      console.error("Error getting average rating:", error);
+      // Return default values instead of throwing to prevent cascading failures
+      return { averageRating: 0, totalFeedback: 0 };
     }
   }
 

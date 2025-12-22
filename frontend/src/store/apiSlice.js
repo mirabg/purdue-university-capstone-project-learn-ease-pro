@@ -215,27 +215,18 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: (result, error, { courseId }) => [
         { type: "Rating", id: courseId },
-        "Rating",
-      ],
-    }),
-    updateCourseFeedback: builder.mutation({
-      query: ({ courseId, feedbackId, ...feedbackData }) => ({
-        url: `/courses/${courseId}/feedback/${feedbackId}`,
-        method: "PUT",
-        body: feedbackData,
-      }),
-      invalidatesTags: (result, error, { courseId }) => [
-        { type: "Rating", id: courseId },
+        { type: "Rating", id: `my-${courseId}` },
         "Rating",
       ],
     }),
     deleteCourseFeedback: builder.mutation({
       query: ({ courseId, feedbackId }) => ({
-        url: `/courses/${courseId}/feedback/${feedbackId}`,
+        url: `/courses/feedback/${feedbackId}`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { courseId }) => [
         { type: "Rating", id: courseId },
+        { type: "Rating", id: `my-${courseId}` },
         "Rating",
       ],
     }),
@@ -262,6 +253,14 @@ export const apiSlice = createApi({
       invalidatesTags: (result, error, { courseId }) => [
         { type: "Material", id: courseId },
       ],
+    }),
+    updateCourseMaterial: builder.mutation({
+      query: ({ materialId, formData }) => ({
+        url: `/courses/materials/${materialId}`,
+        method: "PUT",
+        body: formData,
+      }),
+      invalidatesTags: ["Material"],
     }),
     deleteCourseMaterial: builder.mutation({
       query: (materialId) => ({
@@ -291,7 +290,7 @@ export const apiSlice = createApi({
     }),
     updatePost: builder.mutation({
       query: ({ courseId, postId, ...postData }) => ({
-        url: `/courses/${courseId}/posts/${postId}`,
+        url: `/posts/${postId}`,
         method: "PUT",
         body: postData,
       }),
@@ -301,7 +300,7 @@ export const apiSlice = createApi({
     }),
     deletePost: builder.mutation({
       query: ({ courseId, postId }) => ({
-        url: `/courses/${courseId}/posts/${postId}`,
+        url: `/posts/${postId}`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { courseId }) => [
@@ -378,12 +377,12 @@ export const {
   // Ratings
   useGetCourseFeedbackQuery,
   useCreateCourseFeedbackMutation,
-  useUpdateCourseFeedbackMutation,
   useDeleteCourseFeedbackMutation,
   useGetMyCourseFeedbackQuery,
   // Materials
   useGetCourseMaterialsQuery,
   useUploadCourseMaterialMutation,
+  useUpdateCourseMaterialMutation,
   useDeleteCourseMaterialMutation,
   // Posts
   useGetPostsQuery,

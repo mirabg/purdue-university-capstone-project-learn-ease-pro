@@ -132,3 +132,100 @@ exports.deleteCourseMaterial = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Update course material (metadata and optionally file)
+ * @route   PUT /api/courses/materials/:detailId
+ * @access  Admin/Faculty
+ */
+exports.updateCourseMaterial = async (req, res) => {
+  try {
+    const { title, type, description, order } = req.body;
+    const { detailId } = req.params;
+
+    // Get existing material
+    const existingDetail = await courseService.getCourseDetailById(detailId);
+    if (!existingDetail) {
+      // Clean up uploaded file if exists
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(404).json({
+        success: false,
+        message: "Course material not found",
+      });
+    }
+
+    // Prepare update data
+    const updateData = {
+      title: title || existingDetail.title,
+      type: type || existingDetail.type,
+      description:
+        description !== undefined ? description : existingDetail.description,
+      order: order !== undefined ? parseInt(order) : existingDetail.order,
+    };
+
+    // If new file is uploaded, replace the old one
+    if (req.file) {
+      // Delete old file if it exists and is a local upload
+      if (existingDetail.url && existingDetail.url.startsWith("/uploads/")) {
+        const oldFilePath = path.join(__dirname, "../..", existingDetail.url);
+        if (fs.existsSync(oldFilePath)) {
+          try {
+            fs.unlinkSync(oldFilePath);
+          } catch (error) {
+            console.error("Error deleting old file:", error);
+          }
+        }
+      }
+
+      // Set new file URL
+      const fileUrl = `/uploads/${path.basename(path.dirname(req.file.path))}/${
+        req.file.filename
+      }`;
+      updateData.url = fileUrl;
+
+      // Update type based on new file if not provided
+      if (!type) {
+        const mimeType = req.file.mimetype;
+        if (mimeType.includes("video")) {
+          updateData.type = "video";
+        } else if (
+          mimeType.includes("presentation") ||
+          mimeType.includes("powerpoint") ||
+          mimeType.includes("ppt")
+        ) {
+          updateData.type = "presentation";
+        } else {
+          updateData.type = "document";
+        }
+      }
+    }
+
+    // Update the material
+    const updatedDetail = await courseService.updateCourseDetail(
+      detailId,
+      updateData
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedDetail,
+      message: "Course material updated successfully",
+    });
+  } catch (error) {
+    // Clean up uploaded file on error
+    if (req.file) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkError) {
+        console.error("Error deleting file:", unlinkError);
+      }
+    }
+
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

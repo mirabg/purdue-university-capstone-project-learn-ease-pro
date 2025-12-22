@@ -63,6 +63,13 @@ router.delete(
   requireAdminOrFaculty,
   courseController.deleteCourseDetail
 );
+router.put(
+  "/materials/:detailId",
+  requireAuth,
+  requireAdminOrFaculty,
+  upload.single("file"),
+  uploadController.updateCourseMaterial
+);
 router.delete(
   "/materials/:detailId",
   requireAuth,

@@ -27,6 +27,7 @@ function PostCard({
   const [editReplyContent, setEditReplyContent] = useState("");
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState(null);
+  const [error, setError] = useState(null);
 
   const currentUser = useSelector(selectUser);
   const isFaculty = currentUser?.role === "faculty";
@@ -68,12 +69,14 @@ function PostCard({
     if (!replyContent.trim()) return;
 
     try {
+      setError(null);
       await createReply({ postId: post._id, content: replyContent }).unwrap();
       setReplyContent("");
       if (onReply) onReply();
     } catch (error) {
       console.error("Error submitting reply:", error);
-      alert(error.data?.message || "Failed to submit reply");
+      setError(error.data?.message || "Failed to submit reply");
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -81,6 +84,7 @@ function PostCard({
     if (!editReplyContent.trim()) return;
 
     try {
+      setError(null);
       await updateReply({
         replyId,
         content: editReplyContent,
@@ -89,7 +93,8 @@ function PostCard({
       setEditReplyContent("");
     } catch (error) {
       console.error("Error updating reply:", error);
-      alert(error.data?.message || "Failed to update reply");
+      setError(error.data?.message || "Failed to update reply");
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -102,11 +107,13 @@ function PostCard({
     if (!replyToDelete) return;
 
     try {
+      setError(null);
       await deleteReply(replyToDelete).unwrap();
       setReplyToDelete(null);
     } catch (error) {
       console.error("Error deleting reply:", error);
-      alert(error.data?.message || "Failed to delete reply");
+      setError(error.data?.message || "Failed to delete reply");
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -114,16 +121,37 @@ function PostCard({
     e.preventDefault();
     e.stopPropagation();
     try {
+      setError(null);
       await togglePinPost(post._id).unwrap();
       if (onPostUpdated) onPostUpdated();
     } catch (error) {
       console.error("Error toggling pin:", error);
-      alert(error.data?.message || "Failed to toggle pin");
+      setError(error.data?.message || "Failed to toggle pin");
+      setTimeout(() => setError(null), 5000);
     }
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+      {/* Error message */}
+      {error && (
+        <div className="mb-3 bg-red-50 border border-red-200 rounded-md p-3">
+          <div className="flex items-start">
+            <Icon
+              name="error"
+              className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5"
+            />
+            <p className="ml-2 text-sm text-red-700">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="ml-auto text-red-400 hover:text-red-600"
+            >
+              <Icon name="close" className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Post Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">

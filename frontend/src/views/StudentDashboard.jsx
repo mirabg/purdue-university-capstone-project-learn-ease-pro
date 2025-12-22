@@ -5,7 +5,7 @@ import { selectUser } from "@/store/slices/authSlice";
 import {
   useGetEnrollmentsQuery,
   useDeleteCourseFeedbackMutation,
-  useGetMyCourseFeedbackQuery,
+  apiSlice,
 } from "@/store/apiSlice";
 import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
@@ -13,9 +13,11 @@ import AddEditRatingModal from "@components/AddEditRatingModal";
 import CourseMaterialsModal from "@components/CourseMaterialsModal";
 import ConfirmModal from "@components/ConfirmModal";
 import Icon from "@components/Icon";
+import { useDispatch } from "react-redux";
 
 function StudentDashboard() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -28,6 +30,7 @@ function StudentDashboard() {
   const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
   const [courseToDeleteRating, setCourseToDeleteRating] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [userFeedbackMap, setUserFeedbackMap] = useState({});
 
   // RTK Query hook for enrollments
   const { data: enrollmentsData, isLoading } = useGetEnrollmentsQuery({
@@ -40,23 +43,48 @@ function StudentDashboard() {
   // RTK Query mutation for deleting feedback
   const [deleteCourseFeedback] = useDeleteCourseFeedbackMutation();
 
-  // Get user feedback for each accepted course using RTK Query
+  // Get user feedback for each accepted course using useEffect
   const acceptedEnrollments = enrolledCourses.filter(
     (e) => e.status?.toLowerCase() === "accepted"
   );
 
-  // Create a map of course IDs to their feedback data using RTK Query
-  const userFeedbackMap = {};
-  acceptedEnrollments.forEach((enrollment) => {
-    const courseId = enrollment.course._id;
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data: feedbackData } = useGetMyCourseFeedbackQuery(courseId, {
-      skip: !courseId,
-    });
-    if (feedbackData?.success && feedbackData?.data) {
-      userFeedbackMap[courseId] = feedbackData.data;
+  // Fetch feedback for all accepted enrollments
+  useEffect(() => {
+    if (acceptedEnrollments.length > 0) {
+      const fetchFeedback = async () => {
+        const feedbackMap = {};
+
+        await Promise.all(
+          acceptedEnrollments.map(async (enrollment) => {
+            const courseId = enrollment.course._id;
+            if (!courseId) return;
+
+            try {
+              const result = await dispatch(
+                apiSlice.endpoints.getMyCourseFeedback.initiate(courseId)
+              ).unwrap();
+
+              if (result?.success && result?.data) {
+                feedbackMap[courseId] = result.data;
+              }
+            } catch (err) {
+              // No feedback for this course
+            }
+          })
+        );
+
+        setUserFeedbackMap(feedbackMap);
+      };
+
+      fetchFeedback();
+    } else {
+      setUserFeedbackMap({});
     }
-  });
+  }, [
+    enrolledCourses.length,
+    dispatch,
+    acceptedEnrollments.map((e) => e.course._id).join(","),
+  ]);
 
   // Get status badge styling based on enrollment status
   const getStatusBadgeClass = (status) => {
@@ -92,33 +120,31 @@ function StudentDashboard() {
     setAddEditRatingModalOpen(true);
   };
 
-  const handleRatingSuccess = () => {
+  const handleRatingSuccess = async () => {
     // Refetch feedback for updated ratings
-    if (enrolledCourses.length > 0) {
-      const fetchFeedback = async () => {
-        const feedbackMap = {};
-        const acceptedEnrollments = enrolledCourses.filter(
-          (e) => e.status?.toLowerCase() === "accepted"
-        );
+    if (acceptedEnrollments.length > 0) {
+      const feedbackMap = {};
 
-        await Promise.all(
-          acceptedEnrollments.map(async (enrollment) => {
-            try {
-              const response = await courseService.getMyCourseFeedback(
-                enrollment.course._id
-              );
-              if (response.success && response.data) {
-                feedbackMap[enrollment.course._id] = response.data;
-              }
-            } catch (err) {
-              // No feedback for this course
+      await Promise.all(
+        acceptedEnrollments.map(async (enrollment) => {
+          const courseId = enrollment.course._id;
+          if (!courseId) return;
+
+          try {
+            const result = await dispatch(
+              apiSlice.endpoints.getMyCourseFeedback.initiate(courseId)
+            ).unwrap();
+
+            if (result?.success && result?.data) {
+              feedbackMap[courseId] = result.data;
             }
-          })
-        );
+          } catch (err) {
+            // No feedback for this course
+          }
+        })
+      );
 
-        setUserFeedbackMap(feedbackMap);
-      };
-      fetchFeedback();
+      setUserFeedbackMap(feedbackMap);
     }
   };
 
@@ -290,7 +316,7 @@ function StudentDashboard() {
                       </div>
                       {/* Show student's own rating if they've rated */}
                       {userFeedbackMap[enrollment.course._id] && (
-                        <button
+                        <div
                           onClick={() => handleAddEditRating(enrollment.course)}
                           className="mt-2 p-2 bg-primary-50 border border-primary-200 rounded-md hover:bg-primary-100 transition-colors cursor-pointer w-full text-left"
                         >
@@ -351,7 +377,7 @@ function StudentDashboard() {
                               {userFeedbackMap[enrollment.course._id].comment}
                             </p>
                           )}
-                        </button>
+                        </div>
                       )}
                     </div>
                     {enrollment.status?.toLowerCase() === "denied" &&
