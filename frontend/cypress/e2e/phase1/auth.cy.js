@@ -103,7 +103,7 @@ describe("Authentication Flows", () => {
     });
 
     it("should successfully login as faculty and redirect to faculty dashboard", () => {
-      cy.get('input[name="email"]').type("jane.doe@example.com");
+      cy.get('input[name="email"]').type("emily.johnson@example.com");
       cy.get('input[name="password"]').type("password123");
       cy.get('button[type="submit"]').click();
 
@@ -168,11 +168,6 @@ describe("Authentication Flows", () => {
         "be.visible"
       );
       cy.shouldBeLoggedOut();
-    });
-
-    it.skip("should handle network errors gracefully", () => {
-      // Skipped: Cannot test network errors with real backend
-      // Would need to stop backend server to test this
     });
   });
 

@@ -16,8 +16,8 @@ describe("Course Management (Faculty)", () => {
   describe("View Courses", () => {
     it("should display faculty's courses", () => {
       // Navigate to course management
-      cy.contains("Manage Courses").click();
-      cy.url().should("include", "/courses");
+      cy.contains("Manage Your Courses").click();
+      cy.url().should("include", "/faculty/courses");
 
       // Should see courses
       cy.wait(1000);
@@ -31,8 +31,8 @@ describe("Course Management (Faculty)", () => {
     });
 
     it("should show course enrollment counts", () => {
-      cy.contains("Manage Courses").click();
-      cy.url().should("include", "/courses");
+      cy.contains("Manage Your Courses").click();
+      cy.url().should("include", "/faculty/courses");
       cy.wait(1000);
 
       // Check if table displays enrollment information
@@ -48,8 +48,8 @@ describe("Course Management (Faculty)", () => {
 
   describe("Create Course", () => {
     it("should create new course", () => {
-      cy.contains("Manage Courses").click();
-      cy.url().should("include", "/courses");
+      cy.contains("Manage Your Courses").click();
+      cy.url().should("include", "/faculty/courses");
 
       // Click create course button (faculty cannot create, only admin)
       cy.get("body").then(($body) => {
@@ -63,7 +63,7 @@ describe("Course Management (Faculty)", () => {
     });
 
     it("should validate course data", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
 
       // Validation is admin-only feature
       cy.log("Course creation validation is admin-only");
@@ -72,7 +72,7 @@ describe("Course Management (Faculty)", () => {
 
   describe("Edit Course", () => {
     it("should update course information", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Try to edit a course
@@ -88,7 +88,7 @@ describe("Course Management (Faculty)", () => {
     });
 
     it("should update course syllabus", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Faculty can view/edit course details
@@ -98,7 +98,7 @@ describe("Course Management (Faculty)", () => {
 
   describe("Delete Course", () => {
     it("should delete course with confirmation", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Check if delete button exists (admin only)

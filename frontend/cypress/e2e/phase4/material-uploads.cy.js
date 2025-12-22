@@ -10,7 +10,7 @@ describe("Material Uploads (Faculty)", () => {
     // Login as faculty and get a course
     cy.clearAppState();
     cy.visit("/login");
-    cy.get('input[name="email"]').type("jane.doe@example.com");
+    cy.get('input[name="email"]').type("emily.johnson@example.com");
     cy.get('input[name="password"]').type("password123");
     cy.get('button[type="submit"]').click();
     cy.url().should("include", "/dashboard", { timeout: 10000 });
@@ -44,7 +44,7 @@ describe("Material Uploads (Faculty)", () => {
   describe("Upload Materials", () => {
     it("should upload document", () => {
       // Navigate to course management
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Click materials button for a course
@@ -65,7 +65,7 @@ describe("Material Uploads (Faculty)", () => {
     });
 
     it("should upload video", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Video upload functionality
@@ -73,7 +73,7 @@ describe("Material Uploads (Faculty)", () => {
     });
 
     it("should upload presentation", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Presentation upload functionality
@@ -81,7 +81,7 @@ describe("Material Uploads (Faculty)", () => {
     });
 
     it("should validate file size", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // File size validation happens on upload
@@ -89,7 +89,7 @@ describe("Material Uploads (Faculty)", () => {
     });
 
     it("should validate file type", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // File type validation happens on upload
@@ -99,7 +99,7 @@ describe("Material Uploads (Faculty)", () => {
 
   describe("Manage Materials", () => {
     it("should edit material metadata", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Click materials button
@@ -117,7 +117,7 @@ describe("Material Uploads (Faculty)", () => {
     });
 
     it("should delete material", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Click materials button
@@ -135,7 +135,7 @@ describe("Material Uploads (Faculty)", () => {
     });
 
     it("should reorder materials", () => {
-      cy.contains("Manage Courses").click();
+      cy.contains("Manage Your Courses").click();
       cy.wait(1000);
 
       // Material ordering functionality

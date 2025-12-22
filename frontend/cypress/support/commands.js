@@ -62,6 +62,8 @@ Cypress.Commands.add("loginAsAdmin", () => {
     expect(response.status).to.eq(200);
     const { token, data } = response.body;
 
+    // Visit the app to ensure window is available
+    cy.visit("/");
     cy.window().then((window) => {
       window.localStorage.setItem("token", token);
       window.localStorage.setItem("user", JSON.stringify(data));
@@ -78,13 +80,15 @@ Cypress.Commands.add("loginAsFaculty", () => {
     method: "POST",
     url: `${Cypress.env("apiUrl")}/users/login`,
     body: {
-      email: "jane.doe@example.com",
+      email: "emily.johnson@example.com",
       password: "password123",
     },
   }).then((response) => {
     expect(response.status).to.eq(200);
     const { token, data } = response.body;
 
+    // Visit the app to ensure window is available
+    cy.visit("/");
     cy.window().then((window) => {
       window.localStorage.setItem("token", token);
       window.localStorage.setItem("user", JSON.stringify(data));
@@ -108,6 +112,8 @@ Cypress.Commands.add("loginAsStudent", () => {
     expect(response.status).to.eq(200);
     const { token, data } = response.body;
 
+    // Visit the app to ensure window is available
+    cy.visit("/");
     cy.window().then((window) => {
       window.localStorage.setItem("token", token);
       window.localStorage.setItem("user", JSON.stringify(data));

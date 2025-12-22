@@ -7,8 +7,8 @@ describe("User Management (Admin)", () => {
   beforeEach(() => {
     cy.clearAppState();
     cy.visit("/login");
-    cy.get('input[name="email"]').type("admin@university.edu");
-    cy.get('input[name="password"]').type("admin123");
+    cy.get('input[name="email"]').type("admin@nowhere.com");
+    cy.get('input[name="password"]').type("changeme");
     cy.get('button[type="submit"]').click();
     cy.url().should("include", "/dashboard", { timeout: 10000 });
   });
