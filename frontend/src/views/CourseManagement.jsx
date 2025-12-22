@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "@/store/slices/authSlice";
 import { useGetCoursesQuery, useDeleteCourseMutation } from "@/store/apiSlice";
-import { enrollmentService } from "@services/enrollmentService";
 import CourseModal from "@components/CourseModal";
 import CourseMaterialsModal from "@components/CourseMaterialsModal";
 import EnrollmentManagementModal from "@components/EnrollmentManagementModal";
@@ -28,7 +27,6 @@ function CourseManagement() {
   const [materialsCourse, setMaterialsCourse] = useState(null);
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
   const [enrollmentCourse, setEnrollmentCourse] = useState(null);
-  const [enrollmentStats, setEnrollmentStats] = useState({});
   const [ratingsModalOpen, setRatingsModalOpen] = useState(false);
   const [selectedCourseForRatings, setSelectedCourseForRatings] =
     useState(null);
@@ -48,38 +46,6 @@ function CourseManagement() {
 
   // Get dashboard URL based on user role
   const getDashboardUrl = () => {
-    if (currentUser?.role === "admin") {
-      return "/admin/dashboard";
-    } else if (currentUser?.role === "faculty") {
-      return "/faculty/dashboard";
-    }
-    return "/student/dashboard";
-  };
-
-  const fetchEnrollmentStats = async (coursesData) => {
-    try {
-      const statsPromises = coursesData.map((course) =>
-        enrollmentService
-          .getCourseEnrollmentStats(course._id)
-          .then((res) => ({ courseId: course._id, stats: res.data }))
-          .catch(() => ({ courseId: course._id, stats: null }))
-      );
-
-      const results = await Promise.all(statsPromises);
-      const statsMap = {};
-      results.forEach((result) => {
-        if (result.stats) {
-          statsMap[result.courseId] = result.stats;
-        }
-      });
-
-      setEnrollmentStats(statsMap);
-    } catch (err) {
-      console.error("Error fetching enrollment stats:", err);
-    }
-  };
-
-  const handleSearch = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1); // Reset to first page on new search
   };
@@ -286,23 +252,6 @@ function CourseManagement() {
                           onClick={() => handleViewRatings(course)}
                         />
                       </div>
-                      {(isFaculty || isAdmin) &&
-                        enrollmentStats[course._id] && (
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              {enrollmentStats[course._id].total} Total
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                              {enrollmentStats[course._id].pending} Pending
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                              {enrollmentStats[course._id].accepted} Accepted
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                              {enrollmentStats[course._id].denied} Denied
-                            </span>
-                          </div>
-                        )}
                       <div className="flex flex-row items-center flex-wrap gap-2">
                         <button
                           onClick={() => navigate(`/course/${course._id}`)}
@@ -386,14 +335,6 @@ function CourseManagement() {
                       >
                         Rating
                       </th>
-                      {(isFaculty || isAdmin) && (
-                        <th
-                          scope="col"
-                          className="hidden xl:table-cell px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Enrollments
-                        </th>
-                      )}
                       <th
                         scope="col"
                         className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -438,38 +379,6 @@ function CourseManagement() {
                             onClick={() => handleViewRatings(course)}
                           />
                         </td>
-                        {(isFaculty || isAdmin) && (
-                          <td className="hidden xl:table-cell px-4 lg:px-6 py-4 whitespace-nowrap">
-                            {enrollmentStats[course._id] ? (
-                              <div className="text-xs space-y-1">
-                                <div className="flex items-center">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                    {enrollmentStats[course._id].total} Total
-                                  </span>
-                                </div>
-                                <div className="flex items-center">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    {enrollmentStats[course._id].pending}{" "}
-                                    Pending
-                                  </span>
-                                </div>
-                                <div className="flex items-center">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                    {enrollmentStats[course._id].accepted}{" "}
-                                    Accepted
-                                  </span>
-                                </div>
-                                <div className="flex items-center">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                    {enrollmentStats[course._id].denied} Denied
-                                  </span>
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </td>
-                        )}
                         <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                           <div className="flex flex-row items-center justify-end flex-wrap gap-2">
                             <button

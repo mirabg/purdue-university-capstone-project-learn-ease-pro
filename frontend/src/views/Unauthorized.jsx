@@ -1,12 +1,13 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { authService } from "@services/authService";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/authSlice";
 import Icon from "@components/Icon";
 
 function Unauthorized() {
   const navigate = useNavigate();
   const location = useLocation();
   const attemptedPath = location.state?.from || "the requested page";
-  const user = authService.getCurrentUser();
+  const user = useSelector(selectUser);
 
   return (
     <div className="h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
