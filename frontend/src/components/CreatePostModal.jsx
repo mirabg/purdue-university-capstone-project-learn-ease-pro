@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import Icon from "@components/Icon";
 
 function CreatePostModal({ isOpen, onClose, onSubmit, initialData = null }) {
   const [title, setTitle] = useState(initialData?.title || "");
   const [content, setContent] = useState(initialData?.content || "");
   const [submitting, setSubmitting] = useState(false);
+
+  // Update form when initialData changes or modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(initialData?.title || "");
+      setContent(initialData?.content || "");
+    }
+  }, [isOpen, initialData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,19 +70,7 @@ function CreatePostModal({ isOpen, onClose, onSubmit, initialData = null }) {
                   className="text-gray-400 hover:text-gray-500"
                   disabled={submitting}
                 >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <Icon name="close" className="h-6 w-6" />
                 </button>
               </div>
 

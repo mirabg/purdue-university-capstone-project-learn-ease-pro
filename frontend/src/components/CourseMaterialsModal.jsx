@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { courseService } from "@services/courseService";
 import api from "@services/api";
+import Icon from "@components/Icon";
 
 function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
   const [materials, setMaterials] = useState([]);
@@ -119,54 +120,12 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
   const getTypeIcon = (type) => {
     switch (type) {
       case "video":
-        return (
-          <svg
-            className="h-5 w-5 text-red-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-        );
+        return <Icon name="video" className="h-5 w-5 text-red-500" />;
       case "presentation":
-        return (
-          <svg
-            className="h-5 w-5 text-orange-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-            />
-          </svg>
-        );
+        return <Icon name="presentation" className="h-5 w-5 text-orange-500" />;
       case "document":
       default:
-        return (
-          <svg
-            className="h-5 w-5 text-blue-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        );
+        return <Icon name="document" className="h-5 w-5 text-blue-500" />;
     }
   };
 
@@ -189,19 +148,7 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
             onClick={() => onClose(false)}
             className="text-gray-400 hover:text-gray-500 focus:outline-none"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" className="h-6 w-6" />
           </button>
         </div>
 
@@ -321,19 +268,7 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
                 onClick={() => setShowUploadForm(true)}
                 className="mb-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
               >
-                <svg
-                  className="mr-2 h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
+                <Icon name="upload" className="mr-2 h-5 w-5" />
                 Upload Material
               </button>
             ))}
@@ -352,19 +287,10 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
               </div>
             ) : materials.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <svg
+                <Icon
+                  name="file-empty"
                   className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
+                />
                 <p className="mt-2 text-sm text-gray-500">
                   No materials uploaded yet
                 </p>
@@ -410,19 +336,7 @@ function CourseMaterialsModal({ isOpen, onClose, course, readOnly = false }) {
                         onClick={() => handleDelete(material._id)}
                         className="ml-4 text-red-600 hover:text-red-900"
                       >
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
+                        <Icon name="delete" className="h-5 w-5" />
                       </button>
                     )}
                   </div>

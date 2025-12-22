@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { courseService } from "@services/courseService";
 import { userService } from "@services/userService";
+import Icon from "@components/Icon";
 
 function CourseModal({ isOpen, onClose, course }) {
   const [formData, setFormData] = useState({
@@ -146,19 +147,7 @@ function CourseModal({ isOpen, onClose, course }) {
             onClick={() => onClose(false)}
             className="text-gray-400 hover:text-gray-500 focus:outline-none"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" className="h-6 w-6" />
           </button>
         </div>
 

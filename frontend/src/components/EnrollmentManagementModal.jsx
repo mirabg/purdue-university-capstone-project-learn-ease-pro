@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { enrollmentService } from "@services/enrollmentService";
+import Icon from "@components/Icon";
 
 function EnrollmentManagementModal({ isOpen, onClose, course }) {
   const [enrollments, setEnrollments] = useState([]);
@@ -135,21 +136,9 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-500 focus:outline-none"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" className="h-6 w-6" />
           </button>
         </div>
 
@@ -212,19 +201,7 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
           <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <Icon name="error" className="h-5 w-5 text-red-400" />
               </div>
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
@@ -244,19 +221,10 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
             </div>
           ) : enrollments.length === 0 ? (
             <div className="p-8 text-center">
-              <svg
+              <Icon
+                name="users-empty"
                 className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+              />
               <p className="mt-2 text-sm text-gray-500">
                 {filterStatus === "all"
                   ? "No enrollments found for this course"
@@ -283,12 +251,6 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
                       </th>
                       <th
                         scope="col"
-                        className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Status
-                      </th>
-                      <th
-                        scope="col"
                         className="hidden lg:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Enrolled Date
@@ -298,6 +260,12 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
                         className="hidden xl:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         Comments
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Status
                       </th>
                       <th
                         scope="col"
@@ -323,6 +291,29 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
                           <div className="text-sm text-gray-500">
                             {enrollment.student?.email}
                           </div>
+                        </td>
+                        <td className="hidden lg:table-cell px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                          {formatDate(enrollment.createdAt)}
+                        </td>
+                        <td className="hidden xl:table-cell px-3 sm:px-6 py-4">
+                          {editingId === enrollment._id ? (
+                            <textarea
+                              value={editForm.comments}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  comments: e.target.value,
+                                })
+                              }
+                              rows="2"
+                              className="w-full text-xs border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                              placeholder="Add comments..."
+                            />
+                          ) : (
+                            <div className="text-sm text-gray-500 max-w-xs truncate">
+                              {enrollment.comments || "-"}
+                            </div>
+                          )}
                         </td>
                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           {editingId === enrollment._id ? (
@@ -351,29 +342,6 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
                             </span>
                           )}
                         </td>
-                        <td className="hidden lg:table-cell px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                          {formatDate(enrollment.createdAt)}
-                        </td>
-                        <td className="hidden xl:table-cell px-3 sm:px-6 py-4">
-                          {editingId === enrollment._id ? (
-                            <textarea
-                              value={editForm.comments}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  comments: e.target.value,
-                                })
-                              }
-                              rows="2"
-                              className="w-full text-xs border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                              placeholder="Add comments..."
-                            />
-                          ) : (
-                            <div className="text-sm text-gray-500 max-w-xs truncate">
-                              {enrollment.comments || "-"}
-                            </div>
-                          )}
-                        </td>
                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                           {editingId === enrollment._id ? (
                             <div className="flex justify-end space-x-2">
@@ -395,7 +363,7 @@ function EnrollmentManagementModal({ isOpen, onClose, course }) {
                               onClick={() => handleEdit(enrollment)}
                               className="text-primary-600 hover:text-primary-900"
                             >
-                              Edit
+                              Change Status
                             </button>
                           )}
                         </td>

@@ -8,6 +8,8 @@ import CourseRating from "@components/CourseRating";
 import CourseRatingsModal from "@components/CourseRatingsModal";
 import AddEditRatingModal from "@components/AddEditRatingModal";
 import CourseMaterialsModal from "@components/CourseMaterialsModal";
+import ConfirmModal from "@components/ConfirmModal";
+import Icon from "@components/Icon";
 
 function StudentDashboard() {
   const navigate = useNavigate();
@@ -23,6 +25,9 @@ function StudentDashboard() {
   const [isMaterialsModalOpen, setIsMaterialsModalOpen] = useState(false);
   const [selectedCourseForMaterials, setSelectedCourseForMaterials] =
     useState(null);
+  const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
+  const [courseToDeleteRating, setCourseToDeleteRating] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
 
   // Get status badge styling based on enrollment status
   const getStatusBadgeClass = (status) => {
@@ -126,6 +131,33 @@ function StudentDashboard() {
     loadData();
   };
 
+  const handleDeleteRating = (courseId) => {
+    setCourseToDeleteRating(courseId);
+    setConfirmDeleteModalOpen(true);
+    setDeleteError(null);
+  };
+
+  const confirmDeleteRating = async () => {
+    if (!courseToDeleteRating) return;
+
+    const feedback = userFeedbackMap[courseToDeleteRating];
+    if (!feedback) return;
+
+    try {
+      await courseService.deleteCourseFeedback(feedback._id);
+      // Reload data to reflect the deletion
+      loadData();
+      setCourseToDeleteRating(null);
+      setDeleteError(null);
+    } catch (err) {
+      console.error("Error deleting rating:", err);
+      setDeleteError(
+        err.response?.data?.message ||
+          "Failed to delete rating. Please try again."
+      );
+    }
+  };
+
   const handleViewMaterials = (course) => {
     setSelectedCourseForMaterials(course);
     setIsMaterialsModalOpen(true);
@@ -165,19 +197,7 @@ function StudentDashboard() {
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0">
-                  <svg
-                    className="h-8 w-8 text-primary-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
+                  <Icon name="book" className="h-8 w-8 text-primary-600" />
                 </div>
                 <h2 className="text-lg font-medium text-gray-900">
                   My Courses
@@ -217,19 +237,7 @@ function StudentDashboard() {
           <div className="p-6">
             {enrolledCourses.length === 0 ? (
               <div className="text-center py-12">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
+                <Icon name="book" className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">
                   No courses yet
                 </h3>
@@ -238,37 +246,114 @@ function StudentDashboard() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {enrolledCourses.map((enrollment) => (
                   <div
                     key={enrollment._id}
                     className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
                   >
-                    <h3 className="font-semibold text-gray-900 mb-2">
+                    <h3 className="font-semibold text-gray-900 mb-3">
                       {enrollment.course.name}
                     </h3>
-                    <p className="text-sm font-medium text-gray-700 mb-2">
+                    <p className="text-sm font-medium text-gray-700 mb-3">
                       {enrollment.course.courseCode}
                     </p>
                     {enrollment.course.instructor && (
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-gray-600 mb-3">
                         <span className="font-medium">Instructor:</span>{" "}
                         {enrollment.course.instructor.firstName}{" "}
                         {enrollment.course.instructor.lastName}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-4">
                       {enrollment.course.description}
                     </p>
                     {/* Rating Display */}
-                    <div className="mb-3">
-                      <CourseRating
-                        averageRating={enrollment.course.averageRating}
-                        ratingCount={enrollment.course.ratingCount}
-                        size="sm"
-                        clickable={true}
-                        onClick={() => handleViewRatings(enrollment.course)}
-                      />
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between">
+                        <CourseRating
+                          averageRating={enrollment.course.averageRating}
+                          ratingCount={enrollment.course.ratingCount}
+                          size="sm"
+                          clickable={true}
+                          onClick={() => handleViewRatings(enrollment.course)}
+                        />
+                        {/* Show Rate this Course link if not rated */}
+                        {!userFeedbackMap[enrollment.course._id] &&
+                          enrollment.status?.toLowerCase() === "accepted" && (
+                            <button
+                              onClick={() =>
+                                handleAddEditRating(enrollment.course)
+                              }
+                              className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
+                            >
+                              Rate this Course
+                            </button>
+                          )}
+                      </div>
+                      {/* Show student's own rating if they've rated */}
+                      {userFeedbackMap[enrollment.course._id] && (
+                        <button
+                          onClick={() => handleAddEditRating(enrollment.course)}
+                          className="mt-2 p-2 bg-primary-50 border border-primary-200 rounded-md hover:bg-primary-100 transition-colors cursor-pointer w-full text-left"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-primary-900">
+                                Your Rating:
+                              </span>
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Icon
+                                    key={star}
+                                    name="star"
+                                    className={`h-4 w-4 ${
+                                      star <=
+                                      userFeedbackMap[enrollment.course._id]
+                                        .rating
+                                        ? "text-yellow-400 fill-current"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                                <span className="ml-1 text-sm font-semibold text-primary-900">
+                                  (
+                                  {
+                                    userFeedbackMap[enrollment.course._id]
+                                      .rating
+                                  }
+                                  )
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <img
+                                src="/icons/edit.svg"
+                                alt="Edit"
+                                className="h-4 w-4 text-primary-600 hover:opacity-70 cursor-pointer"
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteRating(enrollment.course._id);
+                                }}
+                                className="hover:opacity-70"
+                              >
+                                <img
+                                  src="/icons/delete.svg"
+                                  alt="Delete"
+                                  className="h-4 w-4 text-red-600"
+                                />
+                              </button>
+                            </div>
+                          </div>
+                          {userFeedbackMap[enrollment.course._id].comment && (
+                            <p className="text-xs text-primary-800 mt-1 line-clamp-2">
+                              {userFeedbackMap[enrollment.course._id].comment}
+                            </p>
+                          )}
+                        </button>
+                      )}
                     </div>
                     {enrollment.status?.toLowerCase() === "denied" &&
                       enrollment.comments && (
@@ -282,7 +367,10 @@ function StudentDashboard() {
                         </div>
                       )}
                     <div className="mt-auto">
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2 my-4">
+                        <span className="text-xs font-medium text-gray-700">
+                          Status:
+                        </span>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
                             enrollment.status
@@ -312,19 +400,7 @@ function StudentDashboard() {
                             }}
                             className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
                           >
-                            <svg
-                              className="h-4 w-4 mr-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                              />
-                            </svg>
+                            <Icon name="chat" className="h-4 w-4 mr-2" />
                             Discussion Board
                           </button>
                           <button
@@ -333,43 +409,11 @@ function StudentDashboard() {
                             }
                             className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
                           >
-                            <svg
-                              className="h-4 w-4 mr-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
+                            <Icon
+                              name="download"
+                              className="h-4 w-4 mr-2 text-primary-600"
+                            />
                             Course Materials
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleAddEditRating(enrollment.course)
-                            }
-                            className="w-full inline-flex items-center justify-center px-3 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
-                          >
-                            <svg
-                              className="h-4 w-4 mr-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                              />
-                            </svg>
-                            {userFeedbackMap[enrollment.course._id]
-                              ? "Edit Your Rating"
-                              : "Rate This Course"}
                           </button>
                         </div>
                       )}
@@ -384,19 +428,10 @@ function StudentDashboard() {
         {/* Explore Courses Section */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 text-center">
-            <svg
+            <Icon
+              name="search"
               className="mx-auto h-12 w-12 text-primary-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            />
             <h3 className="mt-4 text-lg font-medium text-gray-900">
               Discover New Courses
             </h3>
@@ -408,19 +443,7 @@ function StudentDashboard() {
               onClick={() => navigate("/student/explore-courses")}
               className="mt-6 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
             >
-              <svg
-                className="-ml-1 mr-3 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <Icon name="search" className="-ml-1 mr-3 h-5 w-5" />
               Explore Courses
             </button>
           </div>
@@ -457,6 +480,40 @@ function StudentDashboard() {
         course={selectedCourseForMaterials}
         readOnly={true}
       />
+
+      {/* Delete Rating Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmDeleteModalOpen}
+        onClose={() => {
+          setConfirmDeleteModalOpen(false);
+          setCourseToDeleteRating(null);
+          setDeleteError(null);
+        }}
+        onConfirm={confirmDeleteRating}
+        title="Delete Rating"
+        message="Are you sure you want to delete your rating? This action cannot be undone."
+      />
+
+      {/* Delete Error Message */}
+      {deleteError && (
+        <div className="fixed bottom-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50 max-w-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <Icon name="error" className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3 flex-1">
+              <p className="text-sm font-medium text-red-800">{deleteError}</p>
+            </div>
+            <button
+              onClick={() => setDeleteError(null)}
+              className="ml-3 flex-shrink-0 text-red-400 hover:text-red-600"
+            >
+              <span className="sr-only">Dismiss</span>
+              <Icon name="close" className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

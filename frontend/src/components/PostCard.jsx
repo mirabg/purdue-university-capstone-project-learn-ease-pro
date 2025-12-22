@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { authService } from "@services/authService";
 import { coursePostService } from "@services/coursePostService";
 import ConfirmModal from "./ConfirmModal";
+import Icon from "@components/Icon";
 
 function PostCard({
   post,
@@ -134,13 +135,7 @@ function PostCard({
           <div className="flex items-center gap-2 mb-1">
             {post.isPinned && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
-                <svg
-                  className="w-3 h-3 mr-1"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10 3a1 1 0 011 1v5h3a1 1 0 110 2h-3v5a1 1 0 11-2 0v-5H6a1 1 0 110-2h3V4a1 1 0 011-1z" />
-                </svg>
+                <Icon name="pin-small" className="w-3 h-3 mr-1" />
                 Pinned
               </span>
             )}
@@ -185,28 +180,10 @@ function PostCard({
               >
                 {post.isPinned ? (
                   // Filled pin icon for pinned posts
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M16 12V4h1a1 1 0 000-2H7a1 1 0 000 2h1v8l-2 2v2h5.586l-.293.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414l.293.293H6v-.586l2-2V4h8v8l2 2v.586h-5.586l.293-.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414l-.293-.293H20v-2l-2-2z" />
-                  </svg>
+                  <Icon name="pin-filled" className="w-5 h-5" />
                 ) : (
                   // Outline pin icon for unpinned posts
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                    />
-                  </svg>
+                  <Icon name="pin-outline" className="w-5 h-5" />
                 )}
               </button>
             )}
@@ -221,19 +198,7 @@ function PostCard({
                   className="p-1 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded transition"
                   title="Edit post"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
+                  <Icon name="edit" className="w-5 h-5" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -244,19 +209,7 @@ function PostCard({
                   className="p-1 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded transition"
                   title="Delete post"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
+                  <Icon name="delete" className="w-5 h-5" />
                 </button>
               </>
             )}
@@ -273,19 +226,7 @@ function PostCard({
           onClick={handleToggleReplies}
           className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
+          <Icon name="chat-reply" className="w-4 h-4" />
           {showReplies ? "Hide" : "Show"} Replies ({post.replyCount || 0})
         </button>
       </div>
@@ -332,38 +273,14 @@ function PostCard({
                             }}
                             className="p-1 text-gray-500 hover:text-primary-600 rounded"
                           >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                              />
-                            </svg>
+                            <Icon name="edit" className="w-4 h-4" />
                           </button>
                         )}
                         <button
                           onClick={() => handleDeleteReply(reply._id)}
                           className="p-1 text-gray-500 hover:text-red-600 rounded"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <Icon name="delete" className="w-4 h-4" />
                         </button>
                       </div>
                     )}

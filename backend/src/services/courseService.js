@@ -34,15 +34,23 @@ class CourseService {
         throw new Error("Course not found");
       }
 
+      // Add rating information
+      const courseObj = course.toObject();
+      const ratingStats = await courseFeedbackRepository.getAverageRating(
+        course._id
+      );
+      courseObj.averageRating = ratingStats.averageRating || 0;
+      courseObj.ratingCount = ratingStats.totalFeedback || 0;
+
       if (includeDetails) {
         const details = await courseDetailRepository.findByCourse(id);
         return {
-          ...course.toObject(),
+          ...courseObj,
           details,
         };
       }
 
-      return course;
+      return courseObj;
     } catch (error) {
       throw error;
     }

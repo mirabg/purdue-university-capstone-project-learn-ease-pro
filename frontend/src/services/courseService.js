@@ -93,6 +93,16 @@ export const courseService = {
     const response = await api.get(`/courses/${courseId}/feedback/my`);
     return response.data;
   },
+
+  /**
+   * Delete course feedback/rating
+   * @param {string} feedbackId - Feedback ID
+   * @returns {Promise} Deletion confirmation
+   */
+  deleteCourseFeedback: async (feedbackId) => {
+    const response = await api.delete(`/courses/feedback/${feedbackId}`);
+    return response.data;
+  },
 };
 
 export default courseService;
