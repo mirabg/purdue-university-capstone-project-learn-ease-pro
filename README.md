@@ -1,6 +1,7 @@
 # LearnEase Pro - Learning Management System
 
-> **Capstone Project** for Purdue University Certificate Program: Full Stack React Development
+> **Capstone Project** for Purdue University Certificate Program: Full Stack React Development  
+> **Author**: Greg Mirabito | [greg_mirabito@yahoo.com](mailto:greg_mirabito@yahoo.com) | [LinkedIn](https://www.linkedin.com/in/gmirabito/)
 
 A comprehensive, production-ready full-stack learning management system that revolutionizes educational content delivery and student engagement. Built with modern web technologies, LearnEase Pro seamlessly integrates course management, real-time collaboration, and analytics into an intuitive platform designed for educational institutions.
 
