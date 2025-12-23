@@ -794,7 +794,8 @@ This project is part of Purdue University Capstone Project.
 
 ## 👥 Team
 
-Purdue University Bootcamp - Capstone Project Team
+**Greg Mirabito**  
+Purdue University Bootcamp - Capstone Project
 
 ---
 
