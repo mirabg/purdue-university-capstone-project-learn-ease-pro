@@ -796,7 +796,9 @@ This project is part of Purdue University Capstone Project.
 ## 👥 Team
 
 **Greg Mirabito**  
-Purdue University Bootcamp - Capstone Project
+Purdue University Bootcamp - Capstone Project  
+📧 [greg_mirabito@yahoo.com](mailto:greg_mirabito@yahoo.com)  
+💼 [LinkedIn Profile](https://www.linkedin.com/in/gmirabito/)
 
 ---
 
