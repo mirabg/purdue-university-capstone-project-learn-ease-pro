@@ -556,4 +556,72 @@ describe("ChatBoard", () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe("error handling", () => {
+    test("displays error message when post fetch fails", () => {
+      mockUseGetPostsQuery.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: { data: { message: "Failed to fetch posts" } },
+      });
+
+      renderWithProviders(<ChatBoard courseId={mockCourseId} />);
+
+      expect(screen.getByText("Failed to fetch posts")).toBeInTheDocument();
+    });
+
+    test("displays close button for error message", () => {
+      mockUseGetPostsQuery.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: { data: { message: "Failed to fetch posts" } },
+      });
+
+      renderWithProviders(<ChatBoard courseId={mockCourseId} />);
+
+      expect(screen.getByText("Failed to fetch posts")).toBeInTheDocument();
+      expect(screen.getByRole("button")).toBeInTheDocument();
+    });
+
+    test("shows error message without specific message text", () => {
+      mockUseGetPostsQuery.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: { message: "Network error" },
+      });
+
+      renderWithProviders(<ChatBoard courseId={mockCourseId} />);
+
+      expect(
+        screen.getByText("Failed to load discussion posts")
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("post count display", () => {
+    test("shows singular 'post' for single post", () => {
+      const singlePost = [mockPosts[0]];
+      mockUseGetPostsQuery.mockReturnValue({
+        data: { data: singlePost, pagination: { pages: 1, total: 1 } },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithProviders(<ChatBoard courseId={mockCourseId} />);
+
+      expect(screen.getByText(/1 post/i)).toBeInTheDocument();
+    });
+
+    test("shows zero posts when no posts available", () => {
+      mockUseGetPostsQuery.mockReturnValue({
+        data: { data: [], pagination: { pages: 0, total: 0 } },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithProviders(<ChatBoard courseId={mockCourseId} />);
+
+      expect(screen.getByText("0 posts")).toBeInTheDocument();
+    });
+  });
 });
