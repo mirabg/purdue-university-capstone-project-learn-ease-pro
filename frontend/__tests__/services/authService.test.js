@@ -1,230 +1,326 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
+import { authService } from "../../src/services/authService";
+import api from "../../src/services/api";
 
-// Mock api module before importing authService
-vi.mock("@services/api", () => ({
-  default: {
-    post: vi.fn(),
-  },
-}));
-
-import { authService } from "@services/authService";
-import api from "@services/api";
+// Mock the api module
+vi.mock("../../src/services/api");
 
 describe("authService", () => {
+  // Mock localStorage
+  const localStorageMock = (() => {
+    let store = {};
+    return {
+      getItem: vi.fn((key) => store[key] || null),
+      setItem: vi.fn((key, value) => {
+        store[key] = value.toString();
+      }),
+      removeItem: vi.fn((key) => {
+        delete store[key];
+      }),
+      clear: vi.fn(() => {
+        store = {};
+      }),
+    };
+  })();
+
   beforeEach(() => {
-    localStorage.clear();
+    // Replace global localStorage with mock
+    global.localStorage = localStorageMock;
     vi.clearAllMocks();
+    localStorageMock.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe("login", () => {
-    it("should store token in localStorage on successful login", async () => {
+    test("should successfully login user and store token and user data", async () => {
       const mockResponse = {
         data: {
-          token: "test-token",
-          user: { id: "1", email: "test@example.com" },
+          token: "mock-jwt-token",
+          user: {
+            id: "user123",
+            email: "test@example.com",
+            name: "Test User",
+            role: "student",
+          },
         },
       };
 
       api.post.mockResolvedValue(mockResponse);
 
-      const credentials = { email: "test@example.com", password: "password" };
+      const credentials = {
+        email: "test@example.com",
+        password: "password123",
+      };
       const result = await authService.login(credentials);
 
-      expect(localStorage.setItem).toHaveBeenCalledWith("token", "test-token");
+      expect(api.post).toHaveBeenCalledWith("/users/login", credentials);
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        "token",
+        "mock-jwt-token"
+      );
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        "user",
+        JSON.stringify(mockResponse.data.user)
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
-    it("should store user in localStorage on successful login", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: "student" };
+    test("should handle login without token", async () => {
       const mockResponse = {
         data: {
-          token: "test-token",
-          user: mockUser,
+          user: {
+            id: "user123",
+            email: "test@example.com",
+          },
         },
       };
 
       api.post.mockResolvedValue(mockResponse);
 
-      const credentials = { email: "test@example.com", password: "password" };
-      await authService.login(credentials);
+      const result = await authService.login({
+        email: "test@example.com",
+        password: "pass",
+      });
 
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        "user",
-        JSON.stringify(mockUser)
-      );
+      expect(localStorage.setItem).toHaveBeenCalledTimes(1); // Only user, not token
+      expect(result).toEqual(mockResponse.data);
+    });
+
+    test("should handle login API error", async () => {
+      const mockError = new Error("Invalid credentials");
+      api.post.mockRejectedValue(mockError);
+
+      await expect(
+        authService.login({ email: "test@example.com", password: "wrong" })
+      ).rejects.toThrow("Invalid credentials");
+
+      expect(localStorage.setItem).not.toHaveBeenCalled();
     });
   });
 
   describe("register", () => {
-    it("should store token in localStorage on successful registration", async () => {
+    test("should successfully register user and store token and user data", async () => {
       const mockResponse = {
         data: {
-          token: "test-token",
-          user: { id: "1", email: "test@example.com" },
+          token: "new-user-token",
+          user: {
+            id: "newuser123",
+            email: "newuser@example.com",
+            name: "New User",
+            role: "student",
+          },
         },
       };
 
       api.post.mockResolvedValue(mockResponse);
 
       const userData = {
-        firstName: "John",
-        lastName: "Doe",
-        email: "test@example.com",
+        email: "newuser@example.com",
         password: "password123",
+        name: "New User",
+        role: "student",
       };
+
       const result = await authService.register(userData);
 
-      expect(localStorage.setItem).toHaveBeenCalledWith("token", "test-token");
+      expect(api.post).toHaveBeenCalledWith("/users/register", userData);
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        "token",
+        "new-user-token"
+      );
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        "user",
+        JSON.stringify(mockResponse.data.user)
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
-    it("should store user in localStorage on successful registration", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: "student" };
+    test("should handle registration without token", async () => {
       const mockResponse = {
         data: {
-          token: "test-token",
-          user: mockUser,
+          user: {
+            id: "newuser123",
+            email: "newuser@example.com",
+          },
         },
       };
 
       api.post.mockResolvedValue(mockResponse);
 
-      const userData = {
-        firstName: "John",
-        lastName: "Doe",
-        email: "test@example.com",
-        password: "password123",
-      };
-      await authService.register(userData);
+      const result = await authService.register({
+        email: "newuser@example.com",
+        password: "pass",
+      });
 
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        "user",
-        JSON.stringify(mockUser)
-      );
+      expect(localStorage.setItem).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(mockResponse.data);
+    });
+
+    test("should handle registration API error", async () => {
+      const mockError = new Error("Email already exists");
+      api.post.mockRejectedValue(mockError);
+
+      await expect(
+        authService.register({
+          email: "existing@example.com",
+          password: "pass",
+        })
+      ).rejects.toThrow("Email already exists");
     });
   });
 
   describe("logout", () => {
-    it("should remove token from localStorage", () => {
-      localStorage.setItem("token", "test-token");
-      authService.logout();
-      expect(localStorage.removeItem).toHaveBeenCalledWith("token");
-    });
+    test("should remove token and user from localStorage", () => {
+      localStorage.setItem("token", "some-token");
+      localStorage.setItem("user", JSON.stringify({ id: "123" }));
 
-    it("should remove user from localStorage", () => {
-      localStorage.setItem("user", JSON.stringify({ id: "1" }));
       authService.logout();
+
+      expect(localStorage.removeItem).toHaveBeenCalledWith("token");
       expect(localStorage.removeItem).toHaveBeenCalledWith("user");
     });
   });
 
   describe("getCurrentUser", () => {
-    it("should return null if no token exists", () => {
+    test("should return user from localStorage if available", () => {
+      const mockUser = {
+        id: "user123",
+        email: "test@example.com",
+        role: "student",
+      };
+      localStorage.getItem.mockReturnValue(JSON.stringify(mockUser));
+
+      const result = authService.getCurrentUser();
+
+      expect(localStorage.getItem).toHaveBeenCalledWith("user");
+      expect(result).toEqual(mockUser);
+    });
+
+    test("should decode JWT token if user not in localStorage", () => {
+      // Mock token with base64 encoded payload
+      const payload = {
+        id: "user123",
+        email: "test@example.com",
+        role: "faculty",
+      };
+      const base64Payload = btoa(JSON.stringify(payload));
+      const mockToken = `header.${base64Payload}.signature`;
+
+      localStorage.getItem.mockImplementation((key) => {
+        if (key === "user") return null;
+        if (key === "token") return mockToken;
+        return null;
+      });
+
+      const result = authService.getCurrentUser();
+
+      expect(result).toEqual(payload);
+    });
+
+    test("should handle invalid JSON in localStorage", () => {
+      localStorage.getItem.mockReturnValue("invalid-json");
+
+      const result = authService.getCurrentUser();
+
+      expect(result).toBeNull();
+    });
+
+    test("should return null when no token exists", () => {
       localStorage.getItem.mockReturnValue(null);
-      const user = authService.getCurrentUser();
-      expect(user).toBeNull();
+
+      const result = authService.getCurrentUser();
+
+      expect(result).toBeNull();
     });
 
-    it("should return user from localStorage if available", () => {
-      const mockUser = { id: "1", email: "test@example.com", role: "student" };
+    test("should handle invalid token format", () => {
       localStorage.getItem.mockImplementation((key) => {
-        if (key === "user") return JSON.stringify(mockUser);
+        if (key === "user") return null;
+        if (key === "token") return "invalid.token";
         return null;
       });
 
-      const user = authService.getCurrentUser();
-      expect(user).toEqual(mockUser);
-    });
+      const result = authService.getCurrentUser();
 
-    it("should fall back to token decode if localStorage user parse fails", () => {
-      const payload = {
-        id: "123",
-        email: "test@example.com",
-        role: "user",
-      };
-      const base64Payload = btoa(JSON.stringify(payload));
-      const token = `header.${base64Payload}.signature`;
-
-      localStorage.getItem.mockImplementation((key) => {
-        if (key === "user") return "invalid json";
-        if (key === "token") return token;
-        return null;
-      });
-
-      const user = authService.getCurrentUser();
-      expect(user).toEqual(payload);
-    });
-
-    it("should decode and return user data from valid token", () => {
-      // Create a valid JWT token payload
-      const payload = {
-        id: "123",
-        email: "test@example.com",
-        role: "user",
-      };
-      const base64Payload = btoa(JSON.stringify(payload));
-      const token = `header.${base64Payload}.signature`;
-
-      localStorage.getItem.mockReturnValue(token);
-
-      const user = authService.getCurrentUser();
-      expect(user).toEqual(payload);
-    });
-
-    it("should return null for invalid token", () => {
-      localStorage.getItem.mockReturnValue("invalid-token");
-      const user = authService.getCurrentUser();
-      expect(user).toBeNull();
+      expect(result).toBeNull();
     });
   });
 
   describe("isAuthenticated", () => {
-    it("should return false if no token exists", () => {
-      localStorage.getItem.mockReturnValue(null);
-      expect(authService.isAuthenticated()).toBe(false);
+    test("should return true when token exists", () => {
+      localStorage.getItem.mockReturnValue("some-token");
+
+      const result = authService.isAuthenticated();
+
+      expect(result).toBe(true);
+      expect(localStorage.getItem).toHaveBeenCalledWith("token");
     });
 
-    it("should return true if token exists", () => {
-      localStorage.getItem.mockReturnValue("test-token");
-      expect(authService.isAuthenticated()).toBe(true);
+    test("should return false when token does not exist", () => {
+      localStorage.getItem.mockReturnValue(null);
+
+      const result = authService.isAuthenticated();
+
+      expect(result).toBe(false);
     });
   });
 
   describe("isAdmin", () => {
-    it("should return false if no user is logged in", () => {
+    test("should return true for admin user", () => {
+      const mockUser = { id: "admin123", role: "admin" };
+      localStorage.getItem.mockReturnValue(JSON.stringify(mockUser));
+
+      const result = authService.isAdmin();
+
+      expect(result).toBe(true);
+    });
+
+    test("should return false for non-admin user", () => {
+      const mockUser = { id: "user123", role: "student" };
+      localStorage.getItem.mockReturnValue(JSON.stringify(mockUser));
+
+      const result = authService.isAdmin();
+
+      expect(result).toBe(false);
+    });
+
+    test("should return false when no user exists", () => {
       localStorage.getItem.mockReturnValue(null);
-      expect(authService.isAdmin()).toBeFalsy();
+
+      const result = authService.isAdmin();
+
+      expect(result).toBeFalsy();
+    });
+  });
+
+  describe("isFaculty", () => {
+    test("should return true for faculty user", () => {
+      const mockUser = { id: "faculty123", role: "faculty" };
+      localStorage.getItem.mockReturnValue(JSON.stringify(mockUser));
+
+      const result = authService.isFaculty();
+
+      expect(result).toBe(true);
     });
 
-    it("should return true for admin user", () => {
-      const payload = {
-        id: "123",
-        email: "admin@example.com",
-        role: "admin",
-      };
-      const base64Payload = btoa(JSON.stringify(payload));
-      const token = `header.${base64Payload}.signature`;
-      localStorage.getItem.mockReturnValue(token);
+    test("should return false for non-faculty user", () => {
+      const mockUser = { id: "user123", role: "student" };
+      localStorage.getItem.mockReturnValue(JSON.stringify(mockUser));
 
-      expect(authService.isAdmin()).toBe(true);
+      const result = authService.isFaculty();
+
+      expect(result).toBe(false);
     });
 
-    it("should return false for non-admin user", () => {
-      const payload = {
-        id: "123",
-        email: "user@example.com",
-        role: "user",
-      };
-      const base64Payload = btoa(JSON.stringify(payload));
-      const token = `header.${base64Payload}.signature`;
-      localStorage.getItem.mockReturnValue(token);
+    test("should return false when no user exists", () => {
+      localStorage.getItem.mockReturnValue(null);
 
-      expect(authService.isAdmin()).toBe(false);
-    });
+      const result = authService.isFaculty();
 
-    it("should return false for invalid token", () => {
-      localStorage.getItem.mockReturnValue("invalid-token");
-      expect(authService.isAdmin()).toBeFalsy();
+      expect(result).toBeFalsy();
     });
   });
 });

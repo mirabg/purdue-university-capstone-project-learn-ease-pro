@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import AdminRoute from "../../src/components/AdminRoute";
+import FacultyRoute from "../../src/components/FacultyRoute";
 import authReducer from "@/store/slices/authSlice";
 
 // Helper function to create a mock store
@@ -21,7 +21,7 @@ const createMockStore = (authState) => {
 // Helper function to render with providers
 const renderWithProviders = (
   component,
-  { initialRoute = "/admin", authState = {}, ...renderOptions } = {}
+  { initialRoute = "/faculty", authState = {}, ...renderOptions } = {}
 ) => {
   const store = createMockStore(authState);
 
@@ -36,8 +36,8 @@ const renderWithProviders = (
               element={<div>Unauthorized Page</div>}
             />
             <Route
-              path="/admin"
-              element={<AdminRoute>{component}</AdminRoute>}
+              path="/faculty"
+              element={<FacultyRoute>{component}</FacultyRoute>}
             />
           </Routes>
         </MemoryRouter>
@@ -48,7 +48,7 @@ const renderWithProviders = (
   };
 };
 
-describe("AdminRoute", () => {
+describe("FacultyRoute", () => {
   describe("when user is not authenticated", () => {
     test("redirects to login page", () => {
       const authState = {
@@ -57,10 +57,10 @@ describe("AdminRoute", () => {
         isAuthenticated: false,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       expect(screen.getByText("Login Page")).toBeInTheDocument();
-      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Faculty Content")).not.toBeInTheDocument();
       expect(screen.queryByText("Unauthorized Page")).not.toBeInTheDocument();
     });
 
@@ -71,9 +71,9 @@ describe("AdminRoute", () => {
         isAuthenticated: false,
       };
 
-      renderWithProviders(<div>Admin Content</div>, {
+      renderWithProviders(<div>Faculty Content</div>, {
         authState,
-        initialRoute: "/admin",
+        initialRoute: "/faculty",
       });
 
       // The component should redirect to login
@@ -81,7 +81,7 @@ describe("AdminRoute", () => {
     });
   });
 
-  describe("when user is authenticated but not an admin", () => {
+  describe("when user is authenticated but not a faculty member", () => {
     test("redirects student to unauthorized page", () => {
       const authState = {
         user: {
@@ -94,29 +94,29 @@ describe("AdminRoute", () => {
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
-      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Faculty Content")).not.toBeInTheDocument();
       expect(screen.queryByText("Login Page")).not.toBeInTheDocument();
     });
 
-    test("redirects faculty to unauthorized page", () => {
+    test("redirects admin to unauthorized page", () => {
       const authState = {
         user: {
           id: "2",
-          name: "Faculty User",
-          email: "faculty@example.com",
-          role: "faculty",
+          name: "Admin User",
+          email: "admin@example.com",
+          role: "admin",
         },
         token: "mock-token",
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
-      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Faculty Content")).not.toBeInTheDocument();
     });
 
     test("redirects user with unknown role to unauthorized page", () => {
@@ -131,10 +131,10 @@ describe("AdminRoute", () => {
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
-      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Faculty Content")).not.toBeInTheDocument();
     });
 
     test("redirects user without role to unauthorized page", () => {
@@ -148,29 +148,29 @@ describe("AdminRoute", () => {
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
-      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Faculty Content")).not.toBeInTheDocument();
     });
   });
 
-  describe("when user is authenticated as admin", () => {
-    test("renders children for admin user", () => {
+  describe("when user is authenticated as faculty", () => {
+    test("renders children for faculty user", () => {
       const authState = {
         user: {
           id: "1",
-          name: "Admin User",
-          email: "admin@example.com",
-          role: "admin",
+          name: "Faculty User",
+          email: "faculty@example.com",
+          role: "faculty",
         },
         token: "mock-token",
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
-      expect(screen.getByText("Admin Content")).toBeInTheDocument();
+      expect(screen.getByText("Faculty Content")).toBeInTheDocument();
       expect(screen.queryByText("Login Page")).not.toBeInTheDocument();
       expect(screen.queryByText("Unauthorized Page")).not.toBeInTheDocument();
     });
@@ -179,9 +179,9 @@ describe("AdminRoute", () => {
       const authState = {
         user: {
           id: "1",
-          name: "Admin User",
-          email: "admin@example.com",
-          role: "admin",
+          name: "Faculty User",
+          email: "faculty@example.com",
+          role: "faculty",
         },
         token: "mock-token",
         isAuthenticated: true,
@@ -189,26 +189,26 @@ describe("AdminRoute", () => {
 
       const ComplexChild = () => (
         <div>
-          <h1>Admin Dashboard</h1>
-          <p>Manage users and courses</p>
-          <button>Add User</button>
+          <h1>Faculty Dashboard</h1>
+          <p>Manage your courses</p>
+          <button>Create Course</button>
         </div>
       );
 
       renderWithProviders(<ComplexChild />, { authState });
 
-      expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
-      expect(screen.getByText("Manage users and courses")).toBeInTheDocument();
-      expect(screen.getByText("Add User")).toBeInTheDocument();
+      expect(screen.getByText("Faculty Dashboard")).toBeInTheDocument();
+      expect(screen.getByText("Manage your courses")).toBeInTheDocument();
+      expect(screen.getByText("Create Course")).toBeInTheDocument();
     });
 
     test("renders nested route components", () => {
       const authState = {
         user: {
           id: "1",
-          name: "Admin User",
-          email: "admin@example.com",
-          role: "admin",
+          name: "Faculty User",
+          email: "faculty@example.com",
+          role: "faculty",
         },
         token: "mock-token",
         isAuthenticated: true,
@@ -216,17 +216,36 @@ describe("AdminRoute", () => {
 
       const NestedComponent = () => (
         <div>
-          <div>Header</div>
-          <div>Sidebar</div>
-          <div>Main Content</div>
+          <div>Course List</div>
+          <div>Assignments</div>
+          <div>Grades</div>
         </div>
       );
 
       renderWithProviders(<NestedComponent />, { authState });
 
-      expect(screen.getByText("Header")).toBeInTheDocument();
-      expect(screen.getByText("Sidebar")).toBeInTheDocument();
-      expect(screen.getByText("Main Content")).toBeInTheDocument();
+      expect(screen.getByText("Course List")).toBeInTheDocument();
+      expect(screen.getByText("Assignments")).toBeInTheDocument();
+      expect(screen.getByText("Grades")).toBeInTheDocument();
+    });
+
+    test("allows faculty with additional properties", () => {
+      const authState = {
+        user: {
+          id: "1",
+          name: "Faculty User",
+          email: "faculty@example.com",
+          role: "faculty",
+          department: "Computer Science",
+          title: "Professor",
+        },
+        token: "mock-token",
+        isAuthenticated: true,
+      };
+
+      renderWithProviders(<div>Faculty Content</div>, { authState });
+
+      expect(screen.getByText("Faculty Content")).toBeInTheDocument();
     });
   });
 
@@ -235,19 +254,19 @@ describe("AdminRoute", () => {
       const authState = {
         user: {
           id: "1",
-          name: "Uppercase Admin",
-          email: "admin@example.com",
-          role: "Admin", // Uppercase
+          name: "Uppercase Faculty",
+          email: "faculty@example.com",
+          role: "Faculty", // Uppercase
         },
         token: "mock-token",
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       // Should redirect to unauthorized because role is case-sensitive
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
-      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Faculty Content")).not.toBeInTheDocument();
     });
 
     test("handles null user object when authenticated flag is true", () => {
@@ -257,7 +276,7 @@ describe("AdminRoute", () => {
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       // Should redirect to unauthorized because user is null
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
@@ -275,7 +294,7 @@ describe("AdminRoute", () => {
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
     });
@@ -292,32 +311,84 @@ describe("AdminRoute", () => {
         isAuthenticated: true,
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
+      expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
+    });
+
+    test("handles role with extra whitespace", () => {
+      const authState = {
+        user: {
+          id: "1",
+          name: "Whitespace Faculty",
+          email: "faculty@example.com",
+          role: " faculty ", // With whitespace
+        },
+        token: "mock-token",
+        isAuthenticated: true,
+      };
+
+      renderWithProviders(<div>Faculty Content</div>, { authState });
+
+      // Should redirect to unauthorized because role doesn't match exactly
       expect(screen.getByText("Unauthorized Page")).toBeInTheDocument();
     });
   });
 
   describe("authentication priority", () => {
     test("checks authentication before role", () => {
-      // Even if user has admin role, not authenticated should redirect to login
+      // Even if user has faculty role, not authenticated should redirect to login
       const authState = {
         user: {
           id: "1",
-          name: "Admin User",
-          email: "admin@example.com",
-          role: "admin",
+          name: "Faculty User",
+          email: "faculty@example.com",
+          role: "faculty",
         },
         token: "mock-token",
         isAuthenticated: false, // Not authenticated
       };
 
-      renderWithProviders(<div>Admin Content</div>, { authState });
+      renderWithProviders(<div>Faculty Content</div>, { authState });
 
       // Should redirect to login, not unauthorized
       expect(screen.getByText("Login Page")).toBeInTheDocument();
       expect(screen.queryByText("Unauthorized Page")).not.toBeInTheDocument();
-      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Faculty Content")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("multiple faculty users", () => {
+    test("renders for different faculty users", () => {
+      const facultyUsers = [
+        {
+          id: "1",
+          name: "Prof. Smith",
+          email: "smith@example.com",
+          role: "faculty",
+        },
+        {
+          id: "2",
+          name: "Dr. Johnson",
+          email: "johnson@example.com",
+          role: "faculty",
+        },
+      ];
+
+      facultyUsers.forEach((user) => {
+        const authState = {
+          user,
+          token: "mock-token",
+          isAuthenticated: true,
+        };
+
+        const { unmount } = renderWithProviders(<div>Faculty Content</div>, {
+          authState,
+        });
+
+        expect(screen.getByText("Faculty Content")).toBeInTheDocument();
+        unmount();
+      });
     });
   });
 });
