@@ -131,7 +131,8 @@ function CourseModal({ isOpen, onClose, course }) {
             {course ? "Edit Course" : "Create New Course"}
           </h3>
           <button
-            onClick={() => onClose(false)}
+            onClick={onClose}
+            type="button"
             className="text-gray-400 hover:text-gray-500 focus:outline-none"
           >
             <Icon name="close" className="h-6 w-6" />

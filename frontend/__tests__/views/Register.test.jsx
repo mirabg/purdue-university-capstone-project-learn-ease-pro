@@ -86,10 +86,10 @@ describe("Register Component", () => {
     it("should render optional address fields", () => {
       renderWithProviders(<Register />);
 
-      expect(screen.getByLabelText(/address/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/street address/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/state/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/zip code/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Zipcode/i)).toBeInTheDocument();
     });
 
     it("should render submit button", () => {
@@ -160,7 +160,7 @@ describe("Register Component", () => {
     it("should update address field on input change", () => {
       renderWithProviders(<Register />);
 
-      const addressInput = screen.getByLabelText(/address/i);
+      const addressInput = screen.getByLabelText(/street address/i);
       fireEvent.change(addressInput, { target: { value: "123 Main St" } });
 
       expect(addressInput).toHaveValue("123 Main St");
@@ -187,7 +187,7 @@ describe("Register Component", () => {
     it("should update zipcode field on input change", () => {
       renderWithProviders(<Register />);
 
-      const zipcodeInput = screen.getByLabelText(/zip code/i);
+      const zipcodeInput = screen.getByLabelText(/Zipcode/i);
       fireEvent.change(zipcodeInput, { target: { value: "10001" } });
 
       expect(zipcodeInput).toHaveValue("10001");
@@ -520,10 +520,10 @@ describe("Register Component", () => {
       const emailInput = screen.getByLabelText(/email address/i);
       const passwordInput = screen.getByLabelText(/^password \*/i);
       const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-      const addressInput = screen.getByLabelText(/address/i);
+      const addressInput = screen.getByLabelText(/street address/i);
       const cityInput = screen.getByLabelText(/city/i);
       const stateInput = screen.getByLabelText(/state/i);
-      const zipcodeInput = screen.getByLabelText(/zip code/i);
+      const zipcodeInput = screen.getByLabelText(/zipcode/i);
       const submitButton = screen.getByRole("button", {
         name: /create account/i,
       });
@@ -609,7 +609,7 @@ describe("Register Component", () => {
 
       fireEvent.change(firstNameInput, { target: { value: "John" } });
       fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-      fireEvent.change(emailInput, { target: { value: "invalid-email" } });
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
       fireEvent.change(passwordInput, { target: { value: "password123" } });
       fireEvent.change(confirmPasswordInput, {
         target: { value: "password123" },

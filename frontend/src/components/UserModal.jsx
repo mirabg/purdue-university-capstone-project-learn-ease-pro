@@ -199,7 +199,8 @@ function UserModal({ user, onClose }) {
                 {isEditMode ? "Edit User" : "Create New User"}
               </h3>
               <button
-                onClick={() => onClose(false)}
+                type="button"
+                onClick={onClose}
                 className="text-gray-400 hover:text-gray-500"
               >
                 <Icon name="close" className="h-6 w-6" />

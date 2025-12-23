@@ -113,7 +113,9 @@ describe("Login Component", () => {
     it("should render link to register page", () => {
       renderWithProviders(<Login />);
 
-      const registerLink = screen.getByRole("link", { name: /sign up/i });
+      const registerLink = screen.getByRole("link", {
+        name: /create an account/i,
+      });
       expect(registerLink).toBeInTheDocument();
       expect(registerLink).toHaveAttribute("href", "/register");
     });

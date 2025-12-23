@@ -36,7 +36,7 @@ vi.mock("@/store/apiSlice", async (importOriginal) => {
 });
 
 // Mock child components
-vi.mock("../PostCard", () => ({
+vi.mock("@components/PostCard", () => ({
   default: ({ post, onEdit, onDelete }) => (
     <div data-testid={`post-${post._id}`}>
       <div>{post.title}</div>
@@ -47,7 +47,7 @@ vi.mock("../PostCard", () => ({
   ),
 }));
 
-vi.mock("../CreatePostModal", () => ({
+vi.mock("@components/CreatePostModal", () => ({
   default: ({ isOpen, onClose, onSubmit, initialData }) =>
     isOpen ? (
       <div data-testid="create-post-modal">
@@ -66,7 +66,7 @@ vi.mock("../CreatePostModal", () => ({
     ) : null,
 }));
 
-vi.mock("../ConfirmModal", () => ({
+vi.mock("@components/ConfirmModal", () => ({
   default: ({ isOpen, onClose, onConfirm }) =>
     isOpen ? (
       <div data-testid="confirm-modal">
@@ -87,6 +87,17 @@ const createMockStore = () => {
   return configureStore({
     reducer: {
       api: () => ({}),
+      auth: () => ({
+        user: {
+          _id: "current-user-id",
+          firstName: "Test",
+          lastName: "User",
+          email: "test@example.com",
+          role: "student",
+        },
+        token: "mock-token",
+        isAuthenticated: true,
+      }),
     },
   });
 };

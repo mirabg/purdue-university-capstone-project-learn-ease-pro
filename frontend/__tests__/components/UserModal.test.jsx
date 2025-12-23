@@ -7,7 +7,7 @@ import UserModal from "../../src/components/UserModal";
 import { apiSlice } from "@/store/apiSlice";
 
 // Mock the Icon component
-vi.mock("../Icon", () => ({
+vi.mock("@components/Icon", () => ({
   default: ({ name, className }) => (
     <span data-icon={name} className={className} />
   ),
